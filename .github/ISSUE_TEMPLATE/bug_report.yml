@@ -1,0 +1,38 @@
+name: 兼容性或错误报告
+description: 报告 RustAnnovar 错误或与原版 ANNOVAR 的结果差异
+title: "[Bug] "
+labels: ["bug", "open-beta"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢参与开放测试。请只提交最小化、去标识化数据，不要上传 ANNOVAR 程序或受许可限制的数据库。
+  - type: input
+    id: version
+    attributes:
+      label: RustAnnovar 版本
+      placeholder: rust-annovar 0.1.0-beta.1
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境与数据库
+      description: 操作系统、CPU、构建版本、数据库文件名和版本。
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: 复现命令
+      description: 请提供 RustAnnovar 与原版 ANNOVAR 命令，并删除敏感路径。
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: difference
+    attributes:
+      label: 输入与结果差异
+      description: 提供最小化输入以及期望结果和实际结果。
+    validations:
+      required: true

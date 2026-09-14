@@ -1,0 +1,5 @@
+##fileformat=VCFv4.2
+##source=RustAnnovar-synthetic-demo
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	DEMO
+chr1	10	demo_pathogenic	A	C	60	PASS	.	GT	0/1
+chr1	25	demo_unmatched	G	A	60	PASS	.	GT	0/1

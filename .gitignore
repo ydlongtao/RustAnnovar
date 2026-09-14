@@ -1,0 +1,9 @@
+/target/
+*.fai
+*.fai.json
+*.tmp
+.DS_Store
+
+# ANNOVAR is distributed after registration. Keep the local compatibility
+# oracle and databases outside this repository's history.
+/annovar/
