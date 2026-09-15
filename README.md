@@ -8,7 +8,7 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-[Install via RubyGems](https://rubygems.org/gems/rust-annovar) · [Download beta gem](https://rubygems.org/gems/rust-annovar-0.1.0.beta.1.gem) · [GitHub Releases](https://github.com/ydlongtao/RustAnnovar/releases)
+[Install via RubyGems](https://rubygems.org/gems/rust-annovar) · [GitHub Packages](https://github.com/users/ydlongtao/packages/rubygems/package/rust-annovar) · [Download beta gem](https://rubygems.org/gems/rust-annovar-0.1.0.beta.1.gem) · [GitHub Releases](https://github.com/ydlongtao/RustAnnovar/releases)
 
 **A variant annotation engine written in Rust, with support for ANNOVAR database formats.**
 
@@ -124,7 +124,7 @@ The downloaded gem still needs Cargo and a native linker to build; Cargo may fet
 
 ### GitHub Packages hosting
 
-The repository also provides a [GitHub Packages publishing workflow](https://github.com/ydlongtao/RustAnnovar/actions/workflows/packages.yml). It builds and tests the source gem, publishes it on new `v*` tags or manual dispatch, and checks registry downloads. The registry endpoint is `https://rubygems.pkg.github.com/ydlongtao`.
+The gem is publicly hosted on [GitHub Packages](https://github.com/users/ydlongtao/packages/rubygems/package/rust-annovar) and linked to this repository. The repository provides a [GitHub Packages publishing workflow](https://github.com/ydlongtao/RustAnnovar/actions/workflows/packages.yml). It builds and tests the source gem, publishes it on new `v*` tags or manual dispatch, and checks registry downloads. The registry endpoint is `https://rubygems.pkg.github.com/ydlongtao`.
 
 RubyGems.org remains the simplest public installation channel. GitHub Packages requires authentication even for public gems: use a GitHub personal access token (classic) with `read:packages` and access to the package. Follow [GitHub's RubyGems authentication instructions](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-rubygems-registry#authenticating-to-github-packages), then install from the configured registry:
 

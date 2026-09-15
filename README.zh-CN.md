@@ -89,7 +89,7 @@ rust-annovar --help
 
 ### GitHub Packages 托管
 
-仓库提供 [GitHub Packages 发布流程](https://github.com/ydlongtao/RustAnnovar/actions/workflows/packages.yml)，在推送新的 `v*` 标签或手动触发时编译、测试和上传源码 Gem，并验证下载。注册表地址为 `https://rubygems.pkg.github.com/ydlongtao`。
+安装包已在 [GitHub Packages](https://github.com/users/ydlongtao/packages/rubygems/package/rust-annovar) 公开托管并关联本仓库。仓库提供 [GitHub Packages 发布流程](https://github.com/ydlongtao/RustAnnovar/actions/workflows/packages.yml)，在推送新的 `v*` 标签或手动触发时编译、测试和上传源码 Gem，并验证下载。注册表地址为 `https://rubygems.pkg.github.com/ydlongtao`。
 
 普通用户建议继续从 RubyGems.org 安装。GitHub Packages 即使是公开包也要求认证：需要具有 `read:packages` 权限及包访问权限的 GitHub 个人访问令牌（classic）。按照 [GitHub 官方说明](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-rubygems-registry#authenticating-to-github-packages) 配置认证后执行：
 
