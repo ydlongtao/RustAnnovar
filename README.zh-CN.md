@@ -58,6 +58,17 @@ cargo install --git https://github.com/ydlongtao/RustAnnovar.git --locked
 rust-annovar --version
 ```
 
+### 从 RubyGems 安装
+
+RubyGems 包会在安装时使用 Cargo 编译 Rust 可执行文件，因此仍需预先安装 Rust 工具链和本机链接器。Ruby 只负责封装和启动编译后的程序。
+
+```bash
+gem install rust-annovar --pre
+rust-annovar --version
+```
+
+RubyGems 版本号显示为 `0.1.0.beta.1`，命令行版本号显示为 `0.1.0-beta.1`。
+
 ### 克隆源码构建
 
 ```bash

@@ -91,7 +91,18 @@ cargo build --release --locked
 cargo install --path . --locked
 ```
 
-### Option 3: Download a release binary
+### Option 3: Install from RubyGems
+
+The RubyGems package contains the Rust source and compiles the executable during installation. It therefore requires Cargo and a native linker; Ruby is used only for packaging and launching the compiled binary.
+
+```bash
+gem install rust-annovar --pre
+rust-annovar --version
+```
+
+Version `0.1.0.beta.1` is a prerelease, so `--pre` is required until a stable version is published. The gem version uses RubyGems notation (`0.1.0.beta.1`), while the executable reports the Cargo version (`0.1.0-beta.1`).
+
+### Option 4: Download a release binary
 
 Visit [Releases](https://github.com/ydlongtao/RustAnnovar/releases) and choose an asset matching your operating system and processor. The initial `v0.1.0-beta.1` release includes an Apple Silicon macOS archive and `SHA256SUMS`. Other platforms can build from source if no matching asset is available.
 
