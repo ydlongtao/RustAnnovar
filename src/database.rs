@@ -515,6 +515,9 @@ pub(crate) fn parse_filter_record(line: &str) -> Result<(OwnedKey, Vec<String>)>
 pub(crate) fn read_filter_headers(path: &Path) -> Result<Vec<String>> {
     for line in open_text(path)?.lines() {
         let line = line?;
+        if line.starts_with("##") {
+            continue;
+        }
         if line.starts_with('#') {
             return Ok(line
                 .trim_start_matches('#')
@@ -555,7 +558,7 @@ fn infer_filter_headers(
 }
 
 fn db_allele(value: &str) -> String {
-    if value == "-" || value == "0" {
+    if value == "-" {
         String::new()
     } else {
         value.to_ascii_uppercase()

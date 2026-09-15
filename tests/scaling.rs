@@ -195,3 +195,38 @@ fn coding_small_changes_validate_sequence_and_classify_both_strands() {
     assert_eq!(hit.values[3], "unknown");
     assert_eq!(hit.values[2], "reference_mismatch");
 }
+
+#[test]
+fn disk_index_external_merge_handles_gzip_and_corrupt_data() {
+    use flate2::{Compression, write::GzEncoder};
+    use std::io::Write;
+    let d = tempdir().unwrap();
+    let source = d.path().join("db.txt.gz");
+    let mut gzip = GzEncoder::new(fs::File::create(&source).unwrap(), Compression::fast());
+    writeln!(gzip, "#Chr\tStart\tEnd\tRef\tAlt\tvalue").unwrap();
+    for i in (1..22000).rev() {
+        writeln!(gzip, "1\t{i}\t{i}\tA\tC\t{}", "x".repeat(500)).unwrap();
+    }
+    gzip.finish().unwrap();
+    let manifest = DiskFilter::build(&source, Some(d.path())).unwrap();
+    let disk = DiskFilter::open(&source, true).unwrap();
+    let v = Variant::new("1", 999, 1000, "A", "C").unwrap();
+    assert_eq!(
+        disk.load_batch(std::slice::from_ref(&v))
+            .unwrap()
+            .annotate(&v, "x")
+            .unwrap()
+            .values,
+        ["x".repeat(500)]
+    );
+    let json: serde_json::Value =
+        serde_json::from_reader(fs::File::open(manifest).unwrap()).unwrap();
+    let data = d.path().join(json["data_file"].as_str().unwrap());
+    let mut bytes = fs::read(&data).unwrap();
+    bytes[0] ^= 1;
+    fs::write(data, bytes).unwrap();
+    assert!(DiskFilter::open(&source, true).is_err());
+    let fresh = DiskFilter::open(&source, false).unwrap();
+    let first = Variant::new("1", 0, 1, "A", "C").unwrap();
+    assert!(fresh.load_batch(&[first]).is_err());
+}

@@ -564,10 +564,14 @@ fn annotate_small_change(
     hit.exonic_function = if delta == 0 {
         if old == new {
             "synonymous block substitution".into()
-        } else if new.iter().position(|&b| b == b'*') < old.iter().position(|&b| b == b'*')
-            && new.contains(&b'*')
+        } else if new.iter().position(|&b| b == b'*').unwrap_or(usize::MAX)
+            < old.iter().position(|&b| b == b'*').unwrap_or(usize::MAX)
         {
             "stopgain".into()
+        } else if old.iter().position(|&b| b == b'*').unwrap_or(usize::MAX)
+            < new.iter().position(|&b| b == b'*').unwrap_or(usize::MAX)
+        {
+            "stoploss".into()
         } else {
             "nonsynonymous block substitution".into()
         }
@@ -626,12 +630,29 @@ fn annotate_small_change(
             end_old -= 1;
             end_new -= 1;
         }
-        format!(
-            "{}_{}delins{}",
-            first + 1,
-            end_old.max(first + 1),
-            String::from_utf8_lossy(&new[first..end_new])
-        )
+        let changed = &new[first..end_new];
+        let residue = |i: usize| format!("{}{}", aa_name(*old.get(i).unwrap_or(&b'X')), i + 1);
+        if end_old == first {
+            format!(
+                "{}_{}ins{}",
+                residue(first.saturating_sub(1)),
+                residue(first),
+                String::from_utf8_lossy(changed)
+            )
+        } else {
+            let span = if end_old == first + 1 {
+                residue(first)
+            } else {
+                format!("{}_{}", residue(first), residue(end_old - 1))
+            };
+            if changed.is_empty() {
+                format!("{span}del")
+            } else if end_old == first + 1 && changed.len() == 1 {
+                format!("{span}{}", aa_name(changed[0]))
+            } else {
+                format!("{span}delins{}", String::from_utf8_lossy(changed))
+            }
+        }
     };
     hit.aa_change = format!(
         "{}:{}:exon{}:c.{}:p.{}",

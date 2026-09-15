@@ -46,7 +46,7 @@ pub struct Manifest {
 struct Cache {
     bytes: usize,
     tick: u64,
-    blocks: HashMap<usize, (u64, Vec<u8>)>,
+    blocks: HashMap<usize, (u64, Vec<Row>, usize)>,
 }
 #[derive(Debug)]
 pub struct DiskFilter {
@@ -384,8 +384,8 @@ impl DiskFilter {
                 }
                 while cache.bytes + size > 64 * 1024 * 1024 && !cache.blocks.is_empty() {
                     let id = *cache.blocks.iter().min_by_key(|(_, v)| v.0).unwrap().0;
-                    let (_, v) = cache.blocks.remove(&id).unwrap();
-                    cache.bytes -= v.len();
+                    let (_, _, bytes) = cache.blocks.remove(&id).unwrap();
+                    cache.bytes -= bytes;
                 }
                 file.seek(SeekFrom::Start(b.start))?;
                 let mut bytes = vec![0; size];
@@ -393,15 +393,38 @@ impl DiskFilter {
                 if format!("{:x}", Sha256::digest(&bytes)) != b.checksum {
                     bail!("index block checksum mismatch");
                 }
-                cache.bytes += size;
-                cache.blocks.insert(i, (tick, bytes));
+                let mut reader = std::io::Cursor::new(bytes);
+                let mut decoded = Vec::new();
+                let mut retained = 0;
+                while let Some(row) = next_row(&mut reader)? {
+                    retained += std::mem::size_of::<Row>()
+                        + row.key.chrom.capacity()
+                        + row.key.reference.capacity()
+                        + row.key.alternate.capacity()
+                        + row.values.capacity() * std::mem::size_of::<String>()
+                        + row.values.iter().map(String::capacity).sum::<usize>();
+                    decoded.push(row);
+                }
+                retained += (decoded.capacity() - decoded.len()) * std::mem::size_of::<Row>();
+                if retained > 64 * 1024 * 1024 {
+                    bail!("decoded index block exceeds cache budget");
+                }
+                while cache.bytes + retained > 64 * 1024 * 1024 && !cache.blocks.is_empty() {
+                    let id = *cache.blocks.iter().min_by_key(|(_, v)| v.0).unwrap().0;
+                    let (_, _, n) = cache.blocks.remove(&id).unwrap();
+                    cache.bytes -= n;
+                }
+                cache.bytes += retained;
+                cache.blocks.insert(i, (tick, decoded, retained));
             }
-            let (used, bytes) = cache.blocks.get_mut(&i).unwrap();
+            let (used, rows, _) = cache.blocks.get_mut(&i).unwrap();
             *used = tick;
-            let mut r = std::io::Cursor::new(bytes.as_slice());
-            while let Some(row) = next_row(&mut r)? {
+            for row in rows {
                 if keys.contains(&row.key) {
-                    records.entry(row.key).or_default().push(row.values);
+                    records
+                        .entry(row.key.clone())
+                        .or_default()
+                        .push(row.values.clone());
                 }
             }
         }

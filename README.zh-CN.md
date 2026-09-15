@@ -1,5 +1,7 @@
 # RustAnnovar
 
+**开发候选版：** `codex/wgs-engine` 分支已加入流式引擎与新索引，详见 [WGS 引擎改动及验收状态](docs/WGS_ENGINE.md)。公开 0.1 安装包仍是已发布基线；开发版本号不代表完成 WGS 验收。
+
 [English](README.md) | **简体中文**
 
 [![CI](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml/badge.svg)](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml)

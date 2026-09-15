@@ -178,6 +178,7 @@ pub fn run(
     let max_bytes =
         (opts.memory_budget.saturating_mul(1024 * 1024 * 1024) / 16).min(64 * 1024 * 1024);
     let mut seen_chrom = false;
+    let mut vcf_columns = 0;
     for (i, line) in open_reader(path)?.lines().enumerate() {
         let line = line.with_context(|| format!("reading input line {}", i + 1))?;
         if line.trim().is_empty() {
@@ -196,6 +197,7 @@ pub fn run(
                         bail!("duplicate VCF column header");
                     }
                     seen_chrom = true;
+                    vcf_columns = line.split('\t').count();
                     if let Some(w) = &mut vout {
                         for (p, range) in protocols.iter().zip(engine.ranges()) {
                             writeln!(
@@ -244,6 +246,9 @@ pub fn run(
         }
         if vcf {
             let (fields, vs) = parse_vcf_record(&line, i + 1, records.len())?;
+            if fields.len() != vcf_columns {
+                bail!("VCF column count differs from header at line {}", i + 1);
+            }
             if let Some(r) = &reference {
                 let pos = fields[1].parse::<u64>()? - 1;
                 if r.sequence(
@@ -371,11 +376,9 @@ fn process(
                 *field = nastring.into();
             }
         }
-        let mut out = row[..engine.headers().len()].to_vec();
-        out.push(statuses[i].into());
-        out.extend(variants[i].extra.clone());
-        out.resize(headers_len(engine, extra_width), nastring.into());
-        write_record(table, &out, if csv { ',' } else { '\t' })?;
+        row.insert(engine.headers().len(), statuses[i].into());
+        row.resize(headers_len(engine, extra_width), nastring.into());
+        write_record(table, row, if csv { ',' } else { '\t' })?;
     }
     if let Some(w) = vout {
         let mut cursor = 0;

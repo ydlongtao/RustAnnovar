@@ -1,5 +1,7 @@
 # RustAnnovar
 
+**Development candidate:** The `codex/wgs-engine` branch implements the next streaming engine. See [WGS engine changes and acceptance status](docs/WGS_ENGINE.md). Published 0.1 packages remain the tested release baseline.
+
 [![CI](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml/badge.svg)](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/rust-annovar.svg)](https://rubygems.org/gems/rust-annovar)
 [![Open Beta](https://img.shields.io/badge/status-open%20beta-orange)](https://github.com/ydlongtao/RustAnnovar/issues)

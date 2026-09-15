@@ -209,8 +209,14 @@ impl AnnotationEngine {
             .max()
             .unwrap_or(0);
         headers.extend((1..=extra_width).map(|index| format!("Otherinfo{index}")));
+        let min_len = if protocols.iter().any(|p| p.operation == Operation::Gene) {
+            128
+        } else {
+            8192
+        };
         let rows = variants
             .par_iter()
+            .with_min_len(min_len)
             .map(|variant| {
                 let mut row = variant.avinput_fields().to_vec();
                 for (index, (protocol, database)) in protocols.iter().zip(loaded).enumerate() {
@@ -371,20 +377,26 @@ pub(crate) fn write_record(
     fields: &[String],
     delimiter: char,
 ) -> Result<()> {
-    let encoded = fields
-        .iter()
-        .map(|value| {
-            if delimiter == ','
-                && (value.contains(',') || value.contains('"') || value.contains('\n'))
-            {
-                format!("\"{}\"", value.replace('"', "\"\""))
-            } else {
-                value.clone()
+    for (i, value) in fields.iter().enumerate() {
+        if i > 0 {
+            writer.write_all(&[delimiter as u8])?;
+        }
+        if delimiter == ',' && value.contains([',', '"', '\n', '\r']) {
+            writer.write_all(b"\"")?;
+            for (j, part) in value.split('"').enumerate() {
+                if j > 0 {
+                    writer.write_all(b"\"\"")?;
+                }
+                writer.write_all(part.as_bytes())?;
             }
-        })
-        .collect::<Vec<_>>();
-    writeln!(writer, "{}", encoded.join(&delimiter.to_string())).context("failed writing output")
+            writer.write_all(b"\"")?;
+        } else {
+            writer.write_all(value.as_bytes())?;
+        }
+    }
+    writer.write_all(b"\n").context("failed writing output")
 }
+
 fn sanitize_info(value: &str) -> String {
     value
         .chars()
