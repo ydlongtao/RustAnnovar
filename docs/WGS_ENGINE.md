@@ -1,4 +1,4 @@
-# WGS engine development: 0.2.0-beta.1
+# WGS engine source: 0.2.0-beta.2 (open beta)
 
 This candidate adds streaming CLI annotation, compact batch ownership, interval indexes, and an immutable disk index for filter databases. It remains an open beta. Public WES/WGS compatibility and performance claims require the remote acceptance report; passing synthetic tests alone is insufficient.
 

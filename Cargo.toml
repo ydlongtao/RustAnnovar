@@ -5,7 +5,7 @@ resolver = "3"
 
 [package]
 name = "rust-annovar"
-version = "0.2.0-beta.1"
+version = "0.2.0-beta.2"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "A fast, auditable Rust implementation of core ANNOVAR workflows"

@@ -1,6 +1,6 @@
 # RustAnnovar
 
-**Development candidate:** This branch contains the existing WGS candidate plus an isolated, experimental **filter MVP** named `rustannovar`. The two executables have different scopes. See [architecture](ARCHITECTURE.md), [measured filter performance](PERFORMANCE.md), and [WGS acceptance status](docs/WGS_ENGINE.md). Public packages are unchanged.
+**Current source version: `0.2.0-beta.2` (open beta).** The `main` branch includes the streaming WGS candidate and the isolated experimental **filter MVP** named `rustannovar`. The two executables have different scopes. See [architecture](ARCHITECTURE.md), [measured filter performance](PERFORMANCE.md), and [WGS acceptance status](docs/WGS_ENGINE.md). Versioned package links below refer to previously published artifacts; this source update does not certify WGS compatibility or publish new registry packages.
 
 [![CI](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml/badge.svg)](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/rust-annovar.svg)](https://rubygems.org/gems/rust-annovar)

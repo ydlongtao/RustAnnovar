@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased — isolated filter MVP
+## 0.2.0-beta.2 — main source update
+
+- Merged streaming annotation and the isolated sorted-filter MVP into `main`.
+- Unified all six Cargo package versions at `0.2.0-beta.2`; source-gem metadata uses `0.2.0.beta.2`.
+- Retained open-beta labeling, measured performance scope and unresolved WGS/Indel compatibility gates. This source update does not publish registry packages.
+
+## Development history — isolated filter MVP
 
 - Added a five-package Rust workspace and experimental `rustannovar annotate` AVinput frontend.
 - Added compact chromosome/allele keys, chromosome-sorted binary-search indexes and borrowed annotation-pool matches.
