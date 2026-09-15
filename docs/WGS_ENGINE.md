@@ -2,6 +2,8 @@
 
 This candidate adds streaming CLI annotation, compact batch ownership, interval indexes, and an immutable disk index for filter databases. It remains an open beta. Public WES/WGS compatibility and performance claims require the remote acceptance report; passing synthetic tests alone is insufficient.
 
+See the [interim acceptance report](WGS_ACCEPTANCE.md) for measured regressions and outstanding release gates.
+
 ## Running the candidate
 
 ```bash
@@ -55,6 +57,6 @@ python3 scripts/hpc_benchmark.py --mode giab
 
 The harness serializes jobs with a lock, selects distinct physical cores on one NUMA node, records machine/storage details and load/swap counters, and runs one first-run plus five warm repeats. Smoke tests use 100,000 synthetic variants at 1/2/4/8/16/32 threads. Scale tests use 1M/10M records at 16 threads. Synthetic inputs repeat 100,000 positions and are explicitly not representative WGS samples. Output row equality is checked after excluding the new status column.
 
-GIAB mode records missing inputs as not validated. It times refGene annotation and Perl separately, but full annotation equivalence requires a field-level comparison report. It does not silently count a missing database as passed. No global caches are cleared. A large machine does not waive the 20 GiB peak-RSS target or the <=20% growth target from 1M to 10M records.
+GIAB mode records missing inputs as not validated. It times refGene annotation and Perl separately and writes a field-level comparison report using `compare_annotations.py`. It does not silently count a missing database as passed. No global caches are cleared. A large machine does not waive the 20 GiB peak-RSS target or the <=20% growth target from 1M to 10M records.
 
 No 0.2 WGS speedup is claimed until these acceptance checks complete. No new public registry release should be inferred from the development version number.

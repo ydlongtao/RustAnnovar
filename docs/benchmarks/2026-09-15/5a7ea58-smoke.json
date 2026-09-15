@@ -1,0 +1,110 @@
+[
+  {
+    "implementation": "baseline",
+    "threads": 1,
+    "label": "synthetic-100000",
+    "median_seconds": 0.45,
+    "min_seconds": 0.44,
+    "max_seconds": 0.46,
+    "max_rss_kib": 195768
+  },
+  {
+    "implementation": "baseline",
+    "threads": 2,
+    "label": "synthetic-100000",
+    "median_seconds": 0.38,
+    "min_seconds": 0.35,
+    "max_seconds": 0.4,
+    "max_rss_kib": 195756
+  },
+  {
+    "implementation": "baseline",
+    "threads": 4,
+    "label": "synthetic-100000",
+    "median_seconds": 0.43,
+    "min_seconds": 0.41,
+    "max_seconds": 0.44,
+    "max_rss_kib": 196024
+  },
+  {
+    "implementation": "baseline",
+    "threads": 8,
+    "label": "synthetic-100000",
+    "median_seconds": 0.62,
+    "min_seconds": 0.51,
+    "max_seconds": 0.66,
+    "max_rss_kib": 195484
+  },
+  {
+    "implementation": "baseline",
+    "threads": 16,
+    "label": "synthetic-100000",
+    "median_seconds": 0.66,
+    "min_seconds": 0.64,
+    "max_seconds": 0.67,
+    "max_rss_kib": 194980
+  },
+  {
+    "implementation": "baseline",
+    "threads": 32,
+    "label": "synthetic-100000",
+    "median_seconds": 0.62,
+    "min_seconds": 0.6,
+    "max_seconds": 0.64,
+    "max_rss_kib": 193296
+  },
+  {
+    "implementation": "candidate",
+    "threads": 1,
+    "label": "synthetic-100000",
+    "median_seconds": 0.47,
+    "min_seconds": 0.39,
+    "max_seconds": 0.47,
+    "max_rss_kib": 64356
+  },
+  {
+    "implementation": "candidate",
+    "threads": 2,
+    "label": "synthetic-100000",
+    "median_seconds": 0.9,
+    "min_seconds": 0.86,
+    "max_seconds": 0.91,
+    "max_rss_kib": 64572
+  },
+  {
+    "implementation": "candidate",
+    "threads": 4,
+    "label": "synthetic-100000",
+    "median_seconds": 0.9,
+    "min_seconds": 0.89,
+    "max_seconds": 0.9,
+    "max_rss_kib": 64928
+  },
+  {
+    "implementation": "candidate",
+    "threads": 8,
+    "label": "synthetic-100000",
+    "median_seconds": 0.91,
+    "min_seconds": 0.87,
+    "max_seconds": 0.91,
+    "max_rss_kib": 64844
+  },
+  {
+    "implementation": "candidate",
+    "threads": 16,
+    "label": "synthetic-100000",
+    "median_seconds": 0.88,
+    "min_seconds": 0.88,
+    "max_seconds": 0.89,
+    "max_rss_kib": 65888
+  },
+  {
+    "implementation": "candidate",
+    "threads": 32,
+    "label": "synthetic-100000",
+    "median_seconds": 0.89,
+    "min_seconds": 0.87,
+    "max_seconds": 0.9,
+    "max_rss_kib": 66280
+  }
+]

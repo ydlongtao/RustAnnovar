@@ -1,0 +1,28 @@
+{
+  "rust_baseline_commit": "deb7a25f1ae178ad8c6060629b1f75f19bec834d",
+  "oracle_files": [
+    {
+      "file": "annovar/annotate_variation.pl",
+      "bytes": 228730,
+      "sha256": "9840d7b4451d79a04c0bd15ce364c4707ddb355b3d796f7b4b47b6e8a850580a"
+    },
+    {
+      "file": "annovar/table_annovar.pl",
+      "bytes": 42936,
+      "sha256": "a3c67e1eb9b8c966e1224539432bab96c0b0003c854445f8dd7775156abdcf4b"
+    },
+    {
+      "file": "annovar/humandb/hg19_refGene.txt",
+      "bytes": 24058653,
+      "sha256": "1c361d4ed4566c6f05a097c6c4a9fd0e67c72ef07ad018dff7cbcaa761209a02"
+    },
+    {
+      "file": "annovar/humandb/hg19_refGeneMrna.fa",
+      "bytes": 283535031,
+      "sha256": "1517d7ef0dde02d377301664cd0c92ff551e499921378f48a4f63fcbfa13aa9b"
+    }
+  ],
+  "hg38": "not yet available locally",
+  "clinvar": "version-specific validation pending",
+  "gnomad": "version-specific validation pending"
+}

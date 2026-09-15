@@ -230,3 +230,33 @@ fn disk_index_external_merge_handles_gzip_and_corrupt_data() {
     let first = Variant::new("1", 0, 1, "A", "C").unwrap();
     assert!(fresh.load_batch(&[first]).is_err());
 }
+
+#[test]
+fn coding_genes_exclude_noncoding_isoforms_and_ncrna_exons_outrank_introns() {
+    use rust_annovar::gene::GeneDatabase;
+    let dir = tempdir().unwrap();
+    let model = dir.path().join("genes.txt");
+    fs::write(
+        &model,
+        concat!(
+            "0\tNM_TEST\tchr1\t+\t0\t100\t0\t100\t2\t0,80,\t20,100,\t0\tCODING\n",
+            "0\tNR_TEST\tchr1\t+\t0\t100\t100\t100\t1\t0,\t100,\t0\tCODING\n",
+            "0\tNR_INTRON\tchr2\t+\t0\t100\t100\t100\t2\t0,80,\t20,100,\t0\tRNA_INTRON\n",
+            "0\tNR_EXON\tchr2\t+\t0\t100\t100\t100\t1\t0,\t100,\t0\tRNA_EXON\n"
+        ),
+    )
+    .unwrap();
+    let db = GeneDatabase::load(&model, None).unwrap();
+    for (chrom, function, gene) in [
+        ("1", "intronic", "CODING"),
+        ("2", "ncRNA_exonic", "RNA_EXON"),
+    ] {
+        let hit = db.annotate(
+            &Variant::new(chrom, 40, 41, "A", "G").unwrap(),
+            "refGene",
+            2,
+            1000,
+        );
+        assert_eq!(&hit.values[..2], &[function.to_string(), gene.to_string()]);
+    }
+}

@@ -1,6 +1,6 @@
 use crate::model::{Annotation, AnnotationKind, Variant, normalize_chrom};
 use anyhow::{Context, Result, bail};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::io::BufRead;
 use std::path::Path;
 
@@ -121,7 +121,15 @@ impl GeneDatabase {
                 .or_default()
                 .push(transcript);
         }
+        // ANNOVAR excludes noncoding isoforms of genes with a coding isoform.
+        let coding_genes: HashSet<String> = by_chrom
+            .values()
+            .flatten()
+            .filter(|tx| tx.cds_start != tx.cds_end)
+            .map(|tx| tx.gene.clone())
+            .collect();
         for transcripts in by_chrom.values_mut() {
+            transcripts.retain(|tx| tx.cds_start != tx.cds_end || !coding_genes.contains(&tx.gene));
             transcripts.sort_by_key(|tx| tx.tx_start);
         }
         let sequences = fasta_path.map(read_fasta).transpose()?.unwrap_or_default();
@@ -193,13 +201,54 @@ impl GeneDatabase {
         hits.sort_by_key(|hit| hit.rank);
         let best_rank = hits[0].rank;
         let best: Vec<_> = hits.iter().filter(|hit| hit.rank == best_rank).collect();
+        let mut groups: Vec<(&str, Vec<&GeneHit>)> = Vec::new();
+        for hit in &best {
+            if let Some((_, group)) = groups.iter_mut().find(|(name, _)| *name == hit.function) {
+                group.push(hit);
+            } else {
+                groups.push((&hit.function, vec![hit]));
+            }
+        }
+        groups.sort_by_key(|(name, _)| match *name {
+            "UTR5" | "upstream" => 0,
+            _ => 1,
+        });
+        if matches!(best_rank, 0 | 2) && variant.end - variant.start <= splice {
+            let splicing: Vec<_> = hits
+                .iter()
+                .filter(|h| matches!(h.function.as_str(), "splicing" | "ncRNA_splicing"))
+                .collect();
+            if !splicing.is_empty() {
+                groups.push(("splicing", splicing));
+            }
+        }
+        let functions = groups
+            .iter()
+            .map(|(name, _)| *name)
+            .collect::<Vec<_>>()
+            .join(";");
+        let genes = groups
+            .iter()
+            .map(|(_, group)| {
+                let mut names: Vec<_> = group.iter().map(|h| h.gene.as_str()).collect();
+                names.sort_unstable();
+                names.dedup();
+                names.join(",")
+            })
+            .collect::<Vec<_>>()
+            .join(";");
+        let details = groups
+            .iter()
+            .map(|(_, group)| join_unique(group.iter().map(|h| h.detail.as_str())))
+            .collect::<Vec<_>>()
+            .join(";");
         Annotation {
             protocol: protocol.to_string(),
             kind: AnnotationKind::Gene,
             values: vec![
-                join_unique(best.iter().map(|hit| hit.function.as_str())),
-                join_unique(best.iter().map(|hit| hit.gene.as_str())),
-                join_unique(best.iter().map(|hit| hit.detail.as_str())),
+                functions,
+                genes,
+                details,
                 join_unique(best.iter().map(|hit| hit.exonic_function.as_str())),
                 join_unique(best.iter().map(|hit| hit.aa_change.as_str())),
             ],
@@ -299,7 +348,7 @@ fn classify(
             "downstream"
         };
         let distance = tx.tx_start - variant.end + 1;
-        return (distance <= flank).then(|| flank_hit(function, tx, distance));
+        return (distance < flank).then(|| flank_hit(function, tx, distance));
     }
     if pos >= tx.tx_end {
         let function = if tx.strand == '+' {
@@ -308,7 +357,7 @@ fn classify(
             "upstream"
         };
         let distance = pos - tx.tx_end + u64::from(!variant.reference.is_empty());
-        return (distance <= flank).then(|| flank_hit(function, tx, distance));
+        return (distance < flank).then(|| flank_hit(function, tx, distance));
     }
     let exon_index = tx
         .exons
@@ -321,11 +370,11 @@ fn classify(
         });
         let mut hit = basic_hit(
             if tx.cds_start == tx.cds_end {
-                2
+                if near_boundary { 3 } else { 4 }
             } else if near_boundary {
                 1
             } else {
-                5
+                6
             },
             if near_boundary {
                 if tx.cds_start == tx.cds_end {
@@ -355,7 +404,7 @@ fn classify(
     if variant.end <= tx.cds_start || variant.start >= tx.cds_end {
         let before = variant.end <= tx.cds_start;
         let mut hit = basic_hit(
-            3,
+            5,
             if before == (tx.strand == '+') {
                 "UTR5"
             } else {
@@ -730,7 +779,7 @@ fn basic_hit(rank: u8, function: &str, tx: &Transcript) -> GeneHit {
 }
 
 fn flank_hit(function: &str, tx: &Transcript, distance: u64) -> GeneHit {
-    let mut hit = basic_hit(6, function, tx);
+    let mut hit = basic_hit(7, function, tx);
     hit.detail = format!("dist={distance}");
     hit
 }

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Serial HPC benchmark; records load and RSS, never clears global caches."""
+from compare_annotations import compare
 import argparse, fcntl, hashlib, itertools, json, os, pathlib, statistics, subprocess, time
 
 
@@ -14,10 +15,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--workspace', type=pathlib.Path, default=pathlib.Path('/DATABANK/users/hflt/RustAnnovar'))
     parser.add_argument('--mode', choices=['smoke', 'scale', 'giab'], default='smoke')
+    parser.add_argument('--candidate-dir', default='candidate')
+    parser.add_argument('--wait', action='store_true')
     args = parser.parse_args(); root = args.workspace
-    lock = open(root/'runs/benchmark.lock', 'w'); fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    lock = open(root/'runs/benchmark.lock', 'w'); fcntl.flock(lock, fcntl.LOCK_EX if args.wait else fcntl.LOCK_EX | fcntl.LOCK_NB)
     run = root/'runs'/(time.strftime('%Y%m%dT%H%M%S')+'-'+args.mode); run.mkdir(exist_ok=False)
-    binaries = {n: root/'builds'/n/'rust-annovar' for n in ['baseline','candidate']}
+    binaries = {'baseline':root/'builds/baseline/rust-annovar','candidate':root/'builds'/args.candidate_dir/'rust-annovar'}
     topology = subprocess.check_output(['lscpu','-p=CPU,CORE,SOCKET,NODE'], text=True)
     cpus, physical, node = [], set(), None
     for line in topology.splitlines():
@@ -31,7 +34,7 @@ def main():
                'storage':subprocess.check_output(['df','-T',str(root)],text=True),
                'binaries':{n:{'sha256':digest(b),'path':str(b)} for n,b in binaries.items()},'cpus':cpus[:32],
                'cache':'first-run followed by warm repeats; not cold-cache'}
-    (run/'environment.json').write_text(json.dumps(envinfo,indent=2)); rows=[]
+    (run/'environment.json').write_text(json.dumps(envinfo,indent=2)); rows=[]; missing_inputs=[]
     def measure(name,cmd,threads,label,repeat):
         prefix=run/f'{label}-{name}-t{threads}-r{repeat}'
         before={'load':os.getloadavg(),'meminfo':pathlib.Path('/proc/meminfo').read_text(),'vmstat':pathlib.Path('/proc/vmstat').read_text()}
@@ -70,7 +73,9 @@ def main():
         for assembly,build in [('GRCh37','hg19'),('GRCh38','hg38')]:
             vcf=root/f'datasets/giab/HG002_{assembly}_1_22_v4.2.1_benchmark.vcf.gz'
             missing=[str(p) for p in [vcf,model/f'{build}_refGene.txt',model/f'{build}_refGeneMrna.fa'] if not p.is_file()]
-            if missing:(run/f'{build}-not-validated.json').write_text(json.dumps({'missing':missing},indent=2));continue
+            if missing:
+                missing_inputs.extend(missing)
+                (run/f'{build}-not-validated.json').write_text(json.dumps({'missing':missing},indent=2));continue
             for name,binary in binaries.items():
                 for repeat in range(6):
                     out=run/f'{build}-{name}.tsv';cmd=[binary,'table',vcf,model,'--build',build,'--protocol','refGene','--operation','g','--vcf-input','--output',out]
@@ -78,9 +83,16 @@ def main():
                     measure(name,cmd,16,build,repeat)
             avinput=run/f'{build}.avinput';subprocess.run([binaries['candidate'],'convert',vcf,'--output',avinput],check=True)
             for repeat in range(6):measure('perl',['perl',root/'baseline/annovar/table_annovar.pl',avinput,model,'-buildver',build,'-protocol','refGene','-operation','g','-nastring','.','-out',run/f'{build}-perl','-remove'],16,build,repeat)
+            comparisons = {}
+            for name in binaries:
+                comparisons[name] = compare(run/f'{build}-{name}.tsv', run/f'{build}-perl.{build}_multianno.txt')
+            (run/f'{build}-compatibility.json').write_text(json.dumps(comparisons, indent=2)+'\n')
     summary=[]
     for name,threads,label in sorted(set((r['implementation'],r['threads'],r['label']) for r in rows if r['repeat']>0)):
         subset=[r for r in rows if (r['implementation'],r['threads'],r['label'])==(name,threads,label) and r['repeat']>0]
         summary.append({'implementation':name,'threads':threads,'label':label,'median_seconds':statistics.median(r['wall_seconds'] for r in subset),'min_seconds':min(r['wall_seconds'] for r in subset),'max_seconds':max(r['wall_seconds'] for r in subset),'max_rss_kib':max(r['peak_rss_kib'] for r in subset)})
-    (run/'summary.json').write_text(json.dumps(summary,indent=2));(run/'SUCCESS').write_text('Selected mode completed. GIAB timings alone do not establish annotation equivalence.\n');print(run)
+    (run/'summary.json').write_text(json.dumps(summary,indent=2))
+    status='INCOMPLETE' if missing_inputs else ('TIMINGS_COMPLETE' if args.mode=='giab' else 'SUCCESS')
+    (run/status).write_text(json.dumps({'missing_inputs':missing_inputs,'note':'Inspect per-build compatibility.json; timing completion is not acceptance.'})+'\n')
+    print(run)
 if __name__=='__main__':main()

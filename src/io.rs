@@ -106,6 +106,9 @@ pub fn parse_vcf_record(
             )
         };
         let mut v = Variant::new(&fields[0], start, end, r, a)?;
+        if !supported_alt(alt) {
+            v.alternate = alt.to_string();
+        }
         v.source_line = line_no;
         v.source_record = Some(record);
         v.allele_index = allele_index;
