@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "records": 10,
+  "matched_records": 8,
+  "unmatched_records": 2,
+  "input_order_preserved": true,
+  "differences": {
+    "native_only_hits": [],
+    "perl_only_hits": [],
+    "native_only_missing": [],
+    "perl_only_missing": []
+  },
+  "commands": [
+    [
+      "perl",
+      "/Users/huangfulongtao/Documents/ChatGPT/Fast_annovar/annovar/annotate_variation.pl",
+      "-filter",
+      "-dbtype",
+      "generic",
+      "-buildver",
+      "hg19",
+      "-genericdbfile",
+      "hg19_mvp.txt",
+      "-outfile",
+      "/private/tmp/rustannovar-filter-oracle-final-20260915/perl",
+      "/private/tmp/rustannovar-filter-oracle-final-20260915/input.avinput",
+      "/private/tmp/rustannovar-filter-oracle-final-20260915/humandb"
+    ],
+    [
+      "/Users/huangfulongtao/Documents/ChatGPT/Fast_annovar/target/release/rustannovar",
+      "annotate",
+      "--input",
+      "/private/tmp/rustannovar-filter-oracle-final-20260915/input.avinput",
+      "--database",
+      "/private/tmp/rustannovar-filter-oracle-final-20260915/humandb/hg19_mvp.txt",
+      "--output",
+      "/private/tmp/rustannovar-filter-oracle-final-20260915/native.tsv",
+      "--threads",
+      "4"
+    ]
+  ],
+  "sha256": {
+    "/private/tmp/rustannovar-filter-oracle-final-20260915/input.avinput": "f7b18866a901c88ed62e1f6e6350e1f53ed0ffd23138dd1d25250cd462e52cc6",
+    "/private/tmp/rustannovar-filter-oracle-final-20260915/humandb/hg19_mvp.txt": "1ad8cc4ddc45d0f8742cd7f8cfd1f252e8e8c7b082e7c931f228ad4f6990ce98",
+    "target/release/rustannovar": "1bdcf28f3d955598650c791761c059e3bccc1edf9b1a89ed496bc9bc79d76d2e",
+    "annovar/annotate_variation.pl": "9840d7b4451d79a04c0bd15ce364c4707ddb355b3d796f7b4b47b6e8a850580a"
+  },
+  "scope": "Synthetic generic filter: SNV, MNV, insertion, deletion, X/Y, chr prefix, repeated input, alternate mismatch. No real database release certification or conflicting duplicate database rows."
+}

@@ -1,5 +1,7 @@
 # RustAnnovar
 
+**新增实验性过滤 MVP：** `rustannovar` 使用紧凑类型、按染色体排序的索引和批次流式处理；目前支持纯文本 AVinput → 过滤注释 TSV。它与既有 `rust-annovar` 命令并存。请参阅 [英文使用示例](README.md#experimental-sorted-filter-mvp)、[架构](ARCHITECTURE.md)及[实测性能](PERFORMANCE.md)。此次没有发布新安装包。
+
 **开发候选版：** `codex/wgs-engine` 分支已加入流式引擎与新索引，详见 [WGS 引擎改动及验收状态](docs/WGS_ENGINE.md)。公开 0.1 安装包仍是已发布基线；开发版本号不代表完成 WGS 验收。
 
 [English](README.md) | **简体中文**

@@ -1,0 +1,10 @@
+{
+  "crates/rustannovar-cli/tests/mvp.rs": "45be54ff32fd5c9fe9adc2658fe3a7ed30caad80a17a0539fc6e03da05fb5c7a",
+  "crates/rustannovar-cli/src/main.rs": "a76d1faa3f6b6e01a101236eb267ba92da29a218bd9dd9605cca0b2d7dfec583",
+  "crates/rustannovar-core/tests/coordinates.rs": "c233f1bafd9d7a70c34797d19ef16c1289066ec5dd4904da9b1bd0f149846dec",
+  "crates/rustannovar-core/src/lib.rs": "7d960c16a41dac9f0f6f07f40f93fa9f502d278b7fc71810abd02fc005f88bae",
+  "crates/rustannovar-db/tests/exact.rs": "6dc4dbe1eda33795e28e906624bf3443061f63ca6afe641e7f3c38f61d10bd80",
+  "crates/rustannovar-db/src/lib.rs": "fe28a109de5c18c6f63649e77c61cf85df407085d983c281a1675c64abfdb3ce",
+  "crates/rustannovar-filter/src/lib.rs": "8414ef46c2a0cec9afa55ee6528189c94d7a63dc12bf468eb08a181f29920821",
+  "crates/rustannovar-vcf/src/lib.rs": "61d7497a56db815b916127cfe8d1f753b8ca7f179352d1d79e4649a1befec5d0"
+}
