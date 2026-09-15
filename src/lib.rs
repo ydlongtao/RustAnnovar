@@ -10,3 +10,9 @@ pub mod model;
 pub mod pipeline;
 
 pub use model::{Annotation, AnnotationKind, Variant};
+
+pub mod batch;
+pub mod disk_index;
+pub mod interval;
+pub mod reference;
+pub mod stream;

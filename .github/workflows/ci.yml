@@ -33,5 +33,5 @@ jobs:
         run: gem build rust-annovar.gemspec --strict
       - name: Install and run gem
         run: |
-          gem install ./rust-annovar-0.1.0.beta.1.gem --no-document
+          gem install ./rust-annovar-*.gem --no-document
           rust-annovar --version

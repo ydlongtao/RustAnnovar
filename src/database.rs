@@ -27,16 +27,16 @@ pub struct RegionRecord {
 #[derive(Debug)]
 pub struct FilterDatabase {
     pub headers: Vec<String>,
-    records: HashMap<OwnedKey, Vec<Vec<String>>>,
+    pub(crate) records: HashMap<OwnedKey, Vec<Vec<String>>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct OwnedKey {
-    chrom: String,
-    start: u64,
-    end: u64,
-    reference: String,
-    alternate: String,
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub(crate) struct OwnedKey {
+    pub(crate) chrom: String,
+    pub(crate) start: u64,
+    pub(crate) end: u64,
+    pub(crate) reference: String,
+    pub(crate) alternate: String,
 }
 
 impl FilterDatabase {
@@ -188,6 +188,7 @@ impl FilterDatabase {
 
 #[derive(Debug)]
 pub struct RegionDatabase {
+    indexes: HashMap<String, crate::interval::IntervalIndex>,
     pub headers: Vec<String>,
     by_chrom: HashMap<String, Vec<RegionRecord>>,
     gff3: bool,
@@ -291,10 +292,20 @@ impl RegionDatabase {
                 headers.push(format!("value{}", headers.len() + 1));
             }
         }
+        let indexes = by_chrom
+            .iter()
+            .map(|(chrom, records)| {
+                (
+                    chrom.clone(),
+                    crate::interval::IntervalIndex::new(records.iter().map(|r| (r.start, r.end))),
+                )
+            })
+            .collect();
         Ok(Self {
             headers,
             by_chrom,
             gff3,
+            indexes,
         })
     }
 
@@ -307,10 +318,12 @@ impl RegionDatabase {
         let records = self.by_chrom.get(&variant.chrom)?;
         let query_len = (variant.end.saturating_sub(variant.start)).max(1) as f64;
         let mut hits: Vec<&RegionRecord> = Vec::new();
-        for record in records {
-            if record.start > variant.end {
-                break;
-            }
+        for index in self
+            .indexes
+            .get(&variant.chrom)?
+            .query(variant.start, variant.end)
+        {
+            let record = &records[index];
             if variant.overlaps(record.start, record.end) {
                 let overlap = variant
                     .end
@@ -467,7 +480,7 @@ fn open_text(path: &Path) -> Result<Box<dyn BufRead>> {
     crate::io::open_reader(path)
 }
 
-fn parse_filter_record(line: &str) -> Result<(OwnedKey, Vec<String>)> {
+pub(crate) fn parse_filter_record(line: &str) -> Result<(OwnedKey, Vec<String>)> {
     let fields: Vec<&str> = line.split('\t').collect();
     if fields.len() < 5 {
         bail!("filter database needs Chr,Start,End,Ref,Alt");
@@ -499,7 +512,7 @@ fn parse_filter_record(line: &str) -> Result<(OwnedKey, Vec<String>)> {
     ))
 }
 
-fn read_filter_headers(path: &Path) -> Result<Vec<String>> {
+pub(crate) fn read_filter_headers(path: &Path) -> Result<Vec<String>> {
     for line in open_text(path)?.lines() {
         let line = line?;
         if line.starts_with('#') {

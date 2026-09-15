@@ -2,7 +2,7 @@ use crate::model::Variant;
 use anyhow::{Context, Result, bail};
 use flate2::read::MultiGzDecoder;
 use std::fs::File;
-use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
+use std::io::{self, BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
 
 pub fn open_reader(path: &Path) -> Result<Box<dyn BufRead>> {
@@ -28,110 +28,119 @@ pub fn open_writer(path: &Path) -> Result<Box<dyn Write>> {
 }
 
 pub fn read_avinput(path: &Path) -> Result<Vec<Variant>> {
-    let reader = open_reader(path)?;
-    let mut variants = Vec::new();
-    for (line_no, line) in reader.lines().enumerate() {
-        let line = line.with_context(|| format!("failed reading line {}", line_no + 1))?;
-        if line.trim().is_empty() || line.starts_with('#') {
-            continue;
-        }
-        let (fields, remainder) = split_avinput_fields(&line);
-        if fields.len() < 5 {
-            bail!(
-                "{}:{}: expected at least five AVinput columns",
-                path.display(),
-                line_no + 1
-            );
-        }
-        let av_start: u64 = fields[1]
-            .parse()
-            .with_context(|| format!("invalid start at line {}", line_no + 1))?;
-        let av_end: u64 = fields[2]
-            .parse()
-            .with_context(|| format!("invalid end at line {}", line_no + 1))?;
-        let reference = allele_from_avinput(fields[3]);
-        let alternate = allele_from_avinput(fields[4]);
-        let (start, end) = if reference.is_empty() {
-            (av_start, av_start)
-        } else {
-            if av_start == 0 {
-                bail!("AVinput coordinates are one-based at line {}", line_no + 1);
-            }
-            (av_start - 1, av_end)
-        };
-        let mut variant = Variant::new(fields[0], start, end, reference, alternate)?;
-        variant.output_chrom = fields[0].to_string();
-        variant.extra = remainder
-            .filter(|value| !value.is_empty())
-            .map(|value| value.split('\t').map(str::to_string).collect())
-            .unwrap_or_default();
-        variant.source_line = line_no + 1;
-        variants.push(variant);
+    open_reader(path)?
+        .lines()
+        .enumerate()
+        .filter_map(|(i, line)| match line {
+            Err(e) => Some(Err(e.into())),
+            Ok(line) if line.trim().is_empty() || line.starts_with('#') => None,
+            Ok(line) => Some(parse_avinput_record(&line, i + 1)),
+        })
+        .collect()
+}
+
+pub fn parse_avinput_record(line: &str, line_no: usize) -> Result<Variant> {
+    let (fields, remainder) = split_avinput_fields(line);
+    if fields.len() < 5 {
+        bail!("line {line_no}: expected at least five AVinput columns");
     }
-    Ok(variants)
+    let start: u64 = fields[1].parse().context("invalid AVinput start")?;
+    let end: u64 = fields[2].parse().context("invalid AVinput end")?;
+    let reference = allele_from_avinput(fields[3]);
+    let alternate = allele_from_avinput(fields[4]);
+    if end < start {
+        bail!("line {line_no}: end precedes start");
+    }
+    let (start, end) = if reference.is_empty() {
+        (start, start)
+    } else {
+        (
+            start
+                .checked_sub(1)
+                .context("AVinput coordinates are one-based")?,
+            end,
+        )
+    };
+    let mut v = Variant::new(fields[0], start, end, reference, alternate)?;
+    v.output_chrom = fields[0].into();
+    v.source_line = line_no;
+    v.extra = remainder
+        .filter(|v| !v.is_empty())
+        .map(|v| v.split('\t').map(str::to_string).collect())
+        .unwrap_or_default();
+    Ok(v)
+}
+
+pub fn parse_vcf_record(
+    line: &str,
+    line_no: usize,
+    record: usize,
+) -> Result<(Vec<String>, Vec<Variant>)> {
+    let fields: Vec<String> = line.split('\t').map(str::to_string).collect();
+    if fields.len() < 8 {
+        bail!("line {line_no}: VCF requires at least eight columns");
+    }
+    let pos: u64 = fields[1].parse().context("invalid VCF POS")?;
+    if pos == 0 {
+        bail!("VCF POS is one-based");
+    }
+    let reference = fields[3].to_ascii_uppercase();
+    if reference.is_empty() || !reference.bytes().all(|b| b"ACGTN".contains(&b)) {
+        bail!("line {line_no}: invalid VCF REF");
+    }
+    let mut variants = Vec::new();
+    for (allele_index, alt) in fields[4].split(',').enumerate() {
+        if alt.is_empty() {
+            bail!("line {line_no}: empty ALT");
+        }
+        let (start, end, r, a) = if supported_alt(alt) {
+            normalize_vcf_alleles(pos - 1, &reference, &alt.to_ascii_uppercase())
+        } else {
+            (
+                pos - 1,
+                (pos - 1)
+                    .checked_add(reference.len() as u64)
+                    .context("coordinate overflow")?,
+                reference.clone(),
+                alt.into(),
+            )
+        };
+        let mut v = Variant::new(&fields[0], start, end, r, a)?;
+        v.source_line = line_no;
+        v.source_record = Some(record);
+        v.allele_index = allele_index;
+        variants.push(v);
+    }
+    Ok((fields, variants))
+}
+
+pub fn supported_alt(alt: &str) -> bool {
+    !alt.is_empty() && alt.bytes().all(|b| b"ACGTNacgtn".contains(&b))
 }
 
 pub fn read_vcf(path: &Path) -> Result<VcfDocument> {
-    let mut reader = open_reader(path)?;
-    let mut text = String::new();
-    reader.read_to_string(&mut text)?;
-    let mut headers = Vec::new();
-    let mut records = Vec::new();
-    let mut variants = Vec::new();
-    for (line_no, line) in text.lines().enumerate() {
+    let mut document = VcfDocument {
+        headers: Vec::new(),
+        records: Vec::new(),
+        variants: Vec::new(),
+    };
+    for (i, line) in open_reader(path)?.lines().enumerate() {
+        let line = line?;
         if line.starts_with('#') {
-            headers.push(line.to_string());
+            document.headers.push(line);
             continue;
         }
         if line.trim().is_empty() {
             continue;
         }
-        let fields: Vec<String> = line.split('\t').map(str::to_string).collect();
-        if fields.len() < 8 {
-            bail!(
-                "{}:{}: VCF requires at least eight columns",
-                path.display(),
-                line_no + 1
-            );
-        }
-        let pos: u64 = fields[1]
-            .parse()
-            .with_context(|| format!("invalid VCF POS at line {}", line_no + 1))?;
-        if pos == 0 {
-            bail!("VCF POS is one-based at line {}", line_no + 1);
-        }
-        let reference = fields[3].to_ascii_uppercase();
-        let alts: Vec<&str> = fields[4].split(',').collect();
-        let record_index = records.len();
-        for (allele_index, alt) in alts.iter().enumerate() {
-            if alt.starts_with('<')
-                || *alt == "*"
-                || *alt == "."
-                || alt.contains('[')
-                || alt.contains(']')
-            {
-                continue;
-            }
-            let (start, end, normalized_ref, normalized_alt) =
-                normalize_vcf_alleles(pos - 1, &reference, alt);
-            let mut variant = Variant::new(&fields[0], start, end, normalized_ref, normalized_alt)?;
-            variant.source_line = line_no + 1;
-            variant.source_record = Some(record_index);
-            variant.allele_index = allele_index;
-            variants.push(variant);
-        }
-        records.push(fields);
+        let (fields, variants) = parse_vcf_record(&line, i + 1, document.records.len())?;
+        document.records.push(fields);
+        document.variants.extend(variants);
     }
-    Ok(VcfDocument {
-        headers,
-        records,
-        variants,
-    })
+    Ok(document)
 }
 
-/// Trim identical suffixes and prefixes while preserving at least one side of
-/// the event. Left alignment against a reference genome is intentionally a
-/// separate operation.
+/// Remove shared sequence without reference-based left alignment.
 pub fn normalize_vcf_alleles(
     mut start: u64,
     reference: &str,

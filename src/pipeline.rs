@@ -53,7 +53,10 @@ pub fn resolve_protocols(
         .iter()
         .zip(operations)
         .map(|(name, operation)| {
-            let database = db_dir.join(format!("{build}_{name}.txt"));
+            let mut database = db_dir.join(format!("{build}_{name}.txt"));
+            if !database.exists() {
+                database = db_dir.join(format!("{build}_{name}.txt.gz"));
+            }
             if !database.exists() {
                 bail!("database does not exist: {}", database.display());
             }
@@ -70,82 +73,189 @@ pub fn resolve_protocols(
         .collect()
 }
 
+enum Loaded {
+    Disk(crate::disk_index::DiskFilter),
+    Filter(FilterDatabase),
+    Region(RegionDatabase),
+    Gene(GeneDatabase),
+}
+
+pub struct AnnotationEngine {
+    protocols: Vec<Protocol>,
+    loaded: Vec<Loaded>,
+    headers: Vec<String>,
+}
+impl AnnotationEngine {
+    pub fn new(protocols: &[Protocol]) -> Result<Self> {
+        Self::new_normalized(protocols, None)
+    }
+    pub fn new_normalized(
+        protocols: &[Protocol],
+        reference: Option<&crate::reference::ReferenceGenome>,
+    ) -> Result<Self> {
+        let mut loaded = Vec::new();
+        let mut headers = vec!["Chr", "Start", "End", "Ref", "Alt"]
+            .into_iter()
+            .map(str::to_string)
+            .collect::<Vec<_>>();
+        for protocol in protocols {
+            let database = match protocol.operation {
+                Operation::Filter => {
+                    if crate::disk_index::DiskFilter::exists(&protocol.database) {
+                        let db = crate::disk_index::DiskFilter::open(&protocol.database, false)?;
+                        db.check_normalization(reference)?;
+                        headers.extend(
+                            db.headers()
+                                .iter()
+                                .map(|h| qualified_header(h, &protocol.name)),
+                        );
+                        loaded.push(Loaded::Disk(db));
+                        continue;
+                    }
+                    if reference.is_some() {
+                        bail!(
+                            "left-align filtering requires an index built with the same reference"
+                        );
+                    }
+                    if std::fs::metadata(&protocol.database)?.len() > 64 * 1024 * 1024 {
+                        bail!(
+                            "filter database exceeds 64 MiB; build a .rai index with db index first"
+                        );
+                    }
+                    let db = FilterDatabase::load(&protocol.database)?;
+                    headers.extend(
+                        db.headers
+                            .iter()
+                            .map(|header| qualified_header(header, &protocol.name)),
+                    );
+                    Loaded::Filter(db)
+                }
+                Operation::Region => {
+                    let db = RegionDatabase::load(&protocol.database)?;
+                    headers.extend(
+                        db.headers
+                            .iter()
+                            .map(|header| qualified_header(header, &protocol.name)),
+                    );
+                    Loaded::Region(db)
+                }
+                Operation::Gene => {
+                    headers.extend(
+                        ["Func", "Gene", "GeneDetail", "ExonicFunc", "AAChange"]
+                            .map(|header| format!("{header}.{}", protocol.name)),
+                    );
+                    Loaded::Gene(GeneDatabase::load(
+                        &protocol.database,
+                        protocol.fasta.as_deref(),
+                    )?)
+                }
+            };
+            loaded.push(database);
+        }
+        let mut seen = std::collections::HashSet::new();
+        for name in &headers {
+            if !seen.insert(name) {
+                bail!("duplicate output column {name}");
+            }
+        }
+        let mut info_ids = std::collections::HashSet::new();
+        for protocol in protocols {
+            if sanitize_info(&protocol.name) == "STATUS"
+                || !info_ids.insert(sanitize_info(&protocol.name))
+            {
+                bail!("duplicate VCF protocol ID");
+            }
+        }
+        Ok(Self {
+            protocols: protocols.to_vec(),
+            loaded,
+            headers,
+        })
+    }
+    pub fn ranges(&self) -> Vec<std::ops::Range<usize>> {
+        let mut start = 5;
+        self.loaded
+            .iter()
+            .map(|db| {
+                let width = match db {
+                    Loaded::Disk(db) => db.headers().len(),
+                    Loaded::Filter(db) => db.headers.len(),
+                    Loaded::Region(db) => db.headers.len(),
+                    Loaded::Gene(_) => 5,
+                };
+                let r = start..start + width;
+                start += width;
+                r
+            })
+            .collect()
+    }
+    pub fn headers(&self) -> &[String] {
+        &self.headers
+    }
+    pub fn annotate(&self, variants: &[Variant], nastring: &str) -> Result<TableResult> {
+        let mut headers = self.headers.clone();
+        let protocols = &self.protocols;
+        let loaded = &self.loaded;
+        let prepared: Vec<Option<FilterDatabase>> = loaded
+            .iter()
+            .map(|db| match db {
+                Loaded::Disk(db) => db.load_batch(variants).map(Some),
+                _ => Ok(None),
+            })
+            .collect::<Result<_>>()?;
+        let extra_width = variants
+            .iter()
+            .map(|variant| variant.extra.len())
+            .max()
+            .unwrap_or(0);
+        headers.extend((1..=extra_width).map(|index| format!("Otherinfo{index}")));
+        let rows = variants
+            .par_iter()
+            .map(|variant| {
+                let mut row = variant.avinput_fields().to_vec();
+                for (index, (protocol, database)) in protocols.iter().zip(loaded).enumerate() {
+                    let unsupported = variant.source_record.is_some()
+                        && !variant.alternate.is_empty()
+                        && !crate::io::supported_alt(&variant.alternate);
+                    let (annotation, width) = match database {
+                        Loaded::Disk(_) => {
+                            let db = prepared[index].as_ref().unwrap();
+                            (db.annotate(variant, &protocol.name), db.headers.len())
+                        }
+                        Loaded::Filter(db) => {
+                            (db.annotate(variant, &protocol.name), db.headers.len())
+                        }
+                        Loaded::Region(db) => {
+                            (db.annotate(variant, &protocol.name, 0.0), db.headers.len())
+                        }
+                        Loaded::Gene(db) => {
+                            (Some(db.annotate(variant, &protocol.name, 2, 1000)), 5)
+                        }
+                    };
+                    append_annotation(
+                        &mut row,
+                        if unsupported { None } else { annotation },
+                        width,
+                        nastring,
+                    );
+                }
+                row.extend(variant.extra.clone());
+                while row.len() < headers.len() {
+                    row.push(nastring.to_string());
+                }
+                row
+            })
+            .collect();
+        Ok(TableResult { headers, rows })
+    }
+}
+
 pub fn annotate_table(
     variants: &[Variant],
     protocols: &[Protocol],
     nastring: &str,
 ) -> Result<TableResult> {
-    enum Loaded {
-        Filter(FilterDatabase),
-        Region(RegionDatabase),
-        Gene(GeneDatabase),
-    }
-    let mut loaded = Vec::new();
-    let mut headers = vec!["Chr", "Start", "End", "Ref", "Alt"]
-        .into_iter()
-        .map(str::to_string)
-        .collect::<Vec<_>>();
-    for protocol in protocols {
-        let database = match protocol.operation {
-            Operation::Filter => {
-                let db = FilterDatabase::load_for_variants(&protocol.database, variants)?;
-                headers.extend(
-                    db.headers
-                        .iter()
-                        .map(|header| qualified_header(header, &protocol.name)),
-                );
-                Loaded::Filter(db)
-            }
-            Operation::Region => {
-                let db = RegionDatabase::load(&protocol.database)?;
-                headers.extend(
-                    db.headers
-                        .iter()
-                        .map(|header| qualified_header(header, &protocol.name)),
-                );
-                Loaded::Region(db)
-            }
-            Operation::Gene => {
-                headers.extend(
-                    ["Func", "Gene", "GeneDetail", "ExonicFunc", "AAChange"]
-                        .map(|header| format!("{header}.{}", protocol.name)),
-                );
-                Loaded::Gene(GeneDatabase::load(
-                    &protocol.database,
-                    protocol.fasta.as_deref(),
-                )?)
-            }
-        };
-        loaded.push(database);
-    }
-    let extra_width = variants
-        .iter()
-        .map(|variant| variant.extra.len())
-        .max()
-        .unwrap_or(0);
-    headers.extend((1..=extra_width).map(|index| format!("Otherinfo{index}")));
-    let rows = variants
-        .par_iter()
-        .map(|variant| {
-            let mut row = variant.avinput_fields().to_vec();
-            for (protocol, database) in protocols.iter().zip(&loaded) {
-                let (annotation, width) = match database {
-                    Loaded::Filter(db) => (db.annotate(variant, &protocol.name), db.headers.len()),
-                    Loaded::Region(db) => {
-                        (db.annotate(variant, &protocol.name, 0.0), db.headers.len())
-                    }
-                    Loaded::Gene(db) => (Some(db.annotate(variant, &protocol.name, 2, 1000)), 5),
-                };
-                append_annotation(&mut row, annotation, width, nastring);
-            }
-            row.extend(variant.extra.clone());
-            while row.len() < headers.len() {
-                row.push(nastring.to_string());
-            }
-            row
-        })
-        .collect();
-    Ok(TableResult { headers, rows })
+    AnnotationEngine::new(protocols)?.annotate(variants, nastring)
 }
 
 pub fn write_table(result: &TableResult, path: &Path, csv: bool) -> Result<()> {
@@ -256,7 +366,11 @@ fn qualified_header(header: &str, protocol: &str) -> String {
     }
 }
 
-fn write_record(writer: &mut dyn Write, fields: &[String], delimiter: char) -> Result<()> {
+pub(crate) fn write_record(
+    writer: &mut dyn Write,
+    fields: &[String],
+    delimiter: char,
+) -> Result<()> {
     let encoded = fields
         .iter()
         .map(|value| {

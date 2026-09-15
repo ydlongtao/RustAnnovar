@@ -42,11 +42,11 @@ fn table_cli_annotates_vcf_and_preserves_sample_columns() {
     assert!(status.success());
     assert_eq!(
         fs::read_to_string(table).unwrap(),
-        "Chr\tStart\tEnd\tRef\tAlt\tCLNSIG.clinvar\n1\t10\t10\tA\tC\tPathogenic\n"
+        "Chr\tStart\tEnd\tRef\tAlt\tCLNSIG.clinvar\tAnnotationStatus\n1\t10\t10\tA\tC\tPathogenic\tok\n"
     );
     let annotated_vcf = fs::read_to_string(vcf).unwrap();
     assert!(annotated_vcf.contains("##INFO=<ID=FA_clinvar"));
-    assert!(annotated_vcf.contains("DP=20;FA_clinvar=Pathogenic\tGT\t0/1"));
+    assert!(annotated_vcf.contains("DP=20;FA_clinvar=Pathogenic;FA_STATUS=ok\tGT\t0/1"));
 }
 
 #[test]
