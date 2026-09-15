@@ -1,0 +1,55 @@
+name: Publish GitHub Packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-packages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'ydlongtao/RustAnnovar'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - name: Build and validate source gem
+        run: |
+          gem build rust-annovar.gemspec --strict
+          gem install ./rust-annovar-*.gem --no-document
+          rust-annovar --version
+          rust-annovar --help
+      - name: Publish to GitHub Packages
+        env:
+          GEM_HOST_API_KEY: Bearer ${{ secrets.GITHUB_TOKEN }}
+        run: gem push ./rust-annovar-*.gem --host https://rubygems.pkg.github.com/ydlongtao
+      - name: Verify registry download
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir verify-package
+          cd verify-package
+          ruby -rnet/http -ruri -e '
+            require_relative "../lib/rust_annovar/version"
+            uri = URI("https://rubygems.pkg.github.com/ydlongtao/gems/rust-annovar-#{RustAnnovar::VERSION}.gem")
+            request = Net::HTTP::Get.new(uri)
+            request.basic_auth(ENV.fetch("GITHUB_ACTOR"), ENV.fetch("GH_TOKEN"))
+            response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(request) }
+            abort "Registry download failed: #{response.code}" unless response.is_a?(Net::HTTPSuccess)
+            File.binwrite("downloaded.gem", response.body)
+          '
+          gem specification downloaded.gem name version
