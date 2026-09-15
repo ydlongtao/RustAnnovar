@@ -8,6 +8,8 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
+[Install via RubyGems](https://rubygems.org/gems/rust-annovar) · [Download beta gem](https://rubygems.org/gems/rust-annovar-0.1.0.beta.1.gem) · [GitHub Releases](https://github.com/ydlongtao/RustAnnovar/releases)
+
 **A variant annotation engine written in Rust, with support for ANNOVAR database formats.**
 
 RustAnnovar provides a native command-line interface and Rust library for annotating genomic variants. It reads supported existing `humandb` files and combines three core operations: exact allele matching, genomic interval overlap, and transcript consequence calculation. Development prioritizes human hg19/hg38 workflows.
@@ -94,6 +96,8 @@ cargo install --path . --locked
 
 ### Option 3: Install from RubyGems
 
+[RubyGems package page](https://rubygems.org/gems/rust-annovar) · [Version 0.1.0.beta.1](https://rubygems.org/gems/rust-annovar/versions/0.1.0.beta.1) · [Direct .gem download](https://rubygems.org/gems/rust-annovar-0.1.0.beta.1.gem)
+
 The RubyGems package contains the Rust source and compiles the executable during installation. It therefore requires Cargo and a native linker; Ruby is used only for packaging and launching the compiled binary.
 
 ```bash
@@ -102,6 +106,21 @@ rust-annovar --version
 ```
 
 Version `0.1.0.beta.1` is a prerelease, so `--pre` is required until a stable version is published. The gem version uses RubyGems notation (`0.1.0.beta.1`), while the executable reports the Cargo version (`0.1.0-beta.1`).
+
+To install this exact beta release:
+
+```bash
+gem install rust-annovar --version 0.1.0.beta.1 --pre
+```
+
+Alternatively, download the `.gem` file using the link above, then run:
+
+```bash
+gem install ./rust-annovar-0.1.0.beta.1.gem
+rust-annovar --help
+```
+
+The downloaded gem still needs Cargo and a native linker to build; Cargo may fetch Rust dependencies during installation. The package does not include ANNOVAR databases. Follow the quick start below for the bundled synthetic example, or supply your own compatible databases.
 
 ### Option 4: Download a release binary
 

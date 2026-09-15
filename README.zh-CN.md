@@ -3,6 +3,7 @@
 [English](README.md) | **简体中文**
 
 [![CI](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml/badge.svg)](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml)
+[![Gem Version](https://badge.fury.io/rb/rust-annovar.svg)](https://rubygems.org/gems/rust-annovar)
 [![Open Beta](https://img.shields.io/badge/status-open%20beta-orange)](https://github.com/ydlongtao/RustAnnovar/issues)
 [![Rust](https://img.shields.io/badge/Rust-1.85%2B-000000?logo=rust)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](LICENSE-MIT)
@@ -60,6 +61,8 @@ rust-annovar --version
 
 ### 从 RubyGems 安装
 
+[RubyGems 项目页](https://rubygems.org/gems/rust-annovar) · [0.1.0.beta.1 版本页](https://rubygems.org/gems/rust-annovar/versions/0.1.0.beta.1) · [直接下载 .gem 安装包](https://rubygems.org/gems/rust-annovar-0.1.0.beta.1.gem)
+
 RubyGems 包会在安装时使用 Cargo 编译 Rust 可执行文件，因此仍需预先安装 Rust 工具链和本机链接器。Ruby 只负责封装和启动编译后的程序。
 
 ```bash
@@ -68,6 +71,21 @@ rust-annovar --version
 ```
 
 RubyGems 版本号显示为 `0.1.0.beta.1`，命令行版本号显示为 `0.1.0-beta.1`。
+
+安装指定测试版本：
+
+```bash
+gem install rust-annovar --version 0.1.0.beta.1 --pre
+```
+
+也可以使用上方链接下载安装包，再执行：
+
+```bash
+gem install ./rust-annovar-0.1.0.beta.1.gem
+rust-annovar --help
+```
+
+下载的安装包仍需 Cargo 和本机链接器进行编译，安装时 Cargo 可能联网获取 Rust 依赖。包内不包含 ANNOVAR 数据库；可以使用下方合成示例体验，或自行提供兼容数据库。
 
 ### 克隆源码构建
 
