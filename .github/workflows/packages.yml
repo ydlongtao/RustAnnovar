@@ -33,7 +33,24 @@ jobs:
           gem install ./rust-annovar-*.gem --no-document
           rust-annovar --version
           rust-annovar --help
+      - name: Check existing version and package metadata
+        id: package
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(ruby -r ./lib/rust_annovar/version -e 'puts RustAnnovar::VERSION')
+          status=$(curl --silent --show-error --output package-versions.json --write-out '%{http_code}' --header "Authorization: Bearer $GH_TOKEN" https://api.github.com/users/ydlongtao/packages/rubygems/rust-annovar/versions)
+          if [ "$status" = 200 ]; then
+            exists=$(jq --arg v "$version" 'any(.[]; .name == $v)' package-versions.json)
+          elif [ "$status" = 404 ]; then
+            exists=false
+          else
+            echo "Package lookup failed: HTTP $status"
+            exit 1
+          fi
+          echo "exists=$exists" >> "$GITHUB_OUTPUT"
       - name: Publish to GitHub Packages
+        if: steps.package.outputs.exists != 'true'
         env:
           GEM_HOST_API_KEY: Bearer ${{ secrets.GITHUB_TOKEN }}
         run: gem push ./rust-annovar-*.gem --host https://rubygems.pkg.github.com/ydlongtao
@@ -49,7 +66,14 @@ jobs:
             request = Net::HTTP::Get.new(uri)
             request.basic_auth(ENV.fetch("GITHUB_ACTOR"), ENV.fetch("GH_TOKEN"))
             response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(request) }
+            5.times do
+              break unless response.is_a?(Net::HTTPRedirection)
+              uri = URI.join(uri, response.fetch("location"))
+              abort "Refusing non-HTTPS redirect" unless uri.scheme == "https"
+              response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(Net::HTTP::Get.new(uri)) }
+            end
             abort "Registry download failed: #{response.code}" unless response.is_a?(Net::HTTPSuccess)
             File.binwrite("downloaded.gem", response.body)
           '
-          gem specification downloaded.gem name version
+          ruby -rrubygems/package -e 's=Gem::Package.new("downloaded.gem").spec; abort "Unexpected package" unless s.name == "rust-annovar"; puts "Verified #{s.name} #{s.version}"'
+          gh api users/ydlongtao/packages/rubygems/rust-annovar --jq '{name,visibility,html_url,repository:.repository.full_name}'

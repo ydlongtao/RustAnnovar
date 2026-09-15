@@ -87,6 +87,18 @@ rust-annovar --help
 
 下载的安装包仍需 Cargo 和本机链接器进行编译，安装时 Cargo 可能联网获取 Rust 依赖。包内不包含 ANNOVAR 数据库；可以使用下方合成示例体验，或自行提供兼容数据库。
 
+### GitHub Packages 托管
+
+仓库提供 [GitHub Packages 发布流程](https://github.com/ydlongtao/RustAnnovar/actions/workflows/packages.yml)，在推送新的 `v*` 标签或手动触发时编译、测试和上传源码 Gem，并验证下载。注册表地址为 `https://rubygems.pkg.github.com/ydlongtao`。
+
+普通用户建议继续从 RubyGems.org 安装。GitHub Packages 即使是公开包也要求认证：需要具有 `read:packages` 权限及包访问权限的 GitHub 个人访问令牌（classic）。按照 [GitHub 官方说明](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-rubygems-registry#authenticating-to-github-packages) 配置认证后执行：
+
+```bash
+gem install rust-annovar --version 0.1.0.beta.1 --pre --source https://rubygems.pkg.github.com/ydlongtao
+```
+
+安装仍需要上述 Rust/Cargo 编译环境。两个注册表分别保存安装包，该工作流只发布至 GitHub Packages。重复上传同一版本可能被拒绝，新版本发布前应更新版本号。
+
 ### 克隆源码构建
 
 ```bash

@@ -122,6 +122,18 @@ rust-annovar --help
 
 The downloaded gem still needs Cargo and a native linker to build; Cargo may fetch Rust dependencies during installation. The package does not include ANNOVAR databases. Follow the quick start below for the bundled synthetic example, or supply your own compatible databases.
 
+### GitHub Packages hosting
+
+The repository also provides a [GitHub Packages publishing workflow](https://github.com/ydlongtao/RustAnnovar/actions/workflows/packages.yml). It builds and tests the source gem, publishes it on new `v*` tags or manual dispatch, and checks registry downloads. The registry endpoint is `https://rubygems.pkg.github.com/ydlongtao`.
+
+RubyGems.org remains the simplest public installation channel. GitHub Packages requires authentication even for public gems: use a GitHub personal access token (classic) with `read:packages` and access to the package. Follow [GitHub's RubyGems authentication instructions](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-rubygems-registry#authenticating-to-github-packages), then install from the configured registry:
+
+```bash
+gem install rust-annovar --version 0.1.0.beta.1 --pre --source https://rubygems.pkg.github.com/ydlongtao
+```
+
+This source gem has the same Rust/Cargo build requirements described above. GitHub Packages and RubyGems.org are separate registries; the workflow publishes only to GitHub Packages. Republishing an existing version may be rejected; bump the version for a new release.
+
 ### Option 4: Download a release binary
 
 Visit [Releases](https://github.com/ydlongtao/RustAnnovar/releases) and choose an asset matching your operating system and processor. The initial `v0.1.0-beta.1` release includes an Apple Silicon macOS archive and `SHA256SUMS`. Other platforms can build from source if no matching asset is available.
