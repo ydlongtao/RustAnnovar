@@ -23,7 +23,14 @@ Candidate `ef68553`, run `runs/20260915T233408-scale`, 16 threads:
 
 Candidate RSS growth is 4.3%, below the 20% target, and peak RSS is below 20 GiB for this workload. Candidate runtime is 3.91 times baseline at 10M records, failing the target of at most 0.5 times baseline. Output equality passed. See [raw summary](benchmarks/2026-09-15/ef68553-scale.json).
 
-Candidate `5a7ea58` caches decoded filter blocks and reduces small-batch task overhead. Its 100,000-record smoke test at 16 threads measures 0.88 seconds (0.88–0.89), versus baseline 0.66 seconds (0.64–0.67), also failing the speed target. This short workload has substantial fixed costs. Results for 1/2/4/8/16/32 threads are in the [raw summary](benchmarks/2026-09-15/5a7ea58-smoke.json). Its 1M/10M run is recorded separately when complete. These timings do not include later gene-classification fixes.
+Candidate `5a7ea58` caches decoded filter blocks and reduces small-batch task overhead. Its 100,000-record smoke test at 16 threads measures 0.88 seconds (0.88–0.89), versus baseline 0.66 seconds (0.64–0.67), also failing the speed target. This short workload has substantial fixed costs. Results for 1/2/4/8/16/32 threads are in the [raw summary](benchmarks/2026-09-15/5a7ea58-smoke.json). Its completed scale run `runs/20260915T234553-scale` gives:
+
+| Records | Baseline seconds | Candidate seconds (range) | Candidate maximum RSS |
+|---|---|---|---|
+| 1,000,000 | 4.94 | 7.79 (7.65–7.88) | 65.3 MiB |
+| 10,000,000 | 19.44 | 77.55 (73.32–77.77) | 65.6 MiB |
+
+RSS grows 0.47%. The candidate takes 3.99 times baseline runtime at 10M records; the speed target fails again. Output equality passed. See the [revised scale summary](benchmarks/2026-09-15/5a7ea58-scale.json). These timings do not include later gene-classification fixes.
 
 The initial scale campaign recorded one-minute system load between 2.52 and 8.70 and zero swap-in/out page increments during measured commands. The revised smoke campaign recorded load 2.67–3.03 and zero swap increments. These system-wide observations do not prove absence of per-core or storage contention. The [environment audit](benchmarks/2026-09-15/environment.json) retains CPU affinity and executable hashes.
 
@@ -31,9 +38,19 @@ Perl speed on matching real GIAB inputs has not yet been measured in this campai
 
 ## Correctness evidence and remaining gates
 
-Local validation passes 22 regular tests and two explicitly enabled Perl oracle tests. Coverage includes gzip external sorting, duplicate hits, corrupt index blocks, stale sources, nested intervals, mixed supported/symbolic ALT, preserved samples, batch/thread invariance, atomic failure handling, left alignment policy agreement, and positive/negative-strand small coding changes. Clippy with warnings denied passes.
+Local validation passes 23 regular tests and two explicitly enabled Perl oracle tests. Coverage includes gzip external sorting, duplicate hits, corrupt index blocks, stale sources, nested intervals, mixed supported/symbolic ALT, preserved samples, batch/thread invariance, atomic failure handling, left alignment policy agreement, and positive/negative-strand small coding changes. Clippy with warnings denied passes.
 
 A separate 50,000-site chr1 positional check found and fixed exclusion of noncoding isoforms for genes with coding isoforms, ncRNA category precedence, combined function separators and flank boundaries. After correction, Func.refGene and Gene.refGene match Perl at every tested site. These arbitrary A>G sites are not reference-consistent and therefore provide **no evidence of protein-consequence agreement**. The input recipe and checksum are recorded in [the positional summary](benchmarks/2026-09-15/positional-check.json). Gene model and Perl checksums are in [the baseline manifest](WGS_BASELINE.json).
+
+The complete 21-row official ex1 table was also compared on Linux using candidate `bfabf5e`. It **does not pass full-field equivalence**: AAChange differs on five rows, GeneDetail on four and ExonicFunc on four. [The unfiltered differences](benchmarks/2026-09-15/remote-ex1-compatibility.json) remain part of the acceptance evidence. Classification and gene-name columns agree.
+
+- Insertion duplication notation and frameshift termination lengths are not yet ANNOVAR-compatible.
+- Two supplied REF alleles disagree with the fixed transcript sequences at the mapped positions (GJB2 predicts genomic C, input G; ERI1 predicts A, input G). The candidate explicitly reports reference_mismatch; this difference is not suppressed. It is transcript-based evidence, not independent genome validation.
+- The large deletion crosses coding boundaries and is outside this round's supported consequence scope.
+- The frameshift substitution versus stopgain priority difference remains unresolved for release acceptance.
+- A splice site adjacent to a UTR lacked exon/UTR detail; a subsequent source fix and regression test address it. The retained remote report refers to the earlier immutable binary, not a rerun of that fix.
+
+[Remote oracle checksums](benchmarks/2026-09-15/remote-oracle.json) match all four fixed local source/database files. GIAB download remains incomplete and cannot yet supply the main biological validation.
 
 | Gate | State |
 |---|---|

@@ -744,7 +744,12 @@ fn noncoding_detail(
         .min_by_key(|(_, g)| v.start.abs_diff(*g))?;
     let at = mapping.position(tx, anchor)?;
     if at < cs || at >= ce {
-        return None;
+        return Some(format!(
+            "{}:exon{}:{}",
+            tx.id,
+            transcript_exon_number(tx, exon),
+            if at < cs { "UTR5" } else { "UTR3" }
+        ));
     }
     let sign = if (v.start > anchor) == (tx.strand == '+') {
         "+"

@@ -1,0 +1,38 @@
+[
+  {
+    "implementation": "baseline",
+    "threads": 16,
+    "label": "synthetic-1000000",
+    "median_seconds": 4.94,
+    "min_seconds": 4.9,
+    "max_seconds": 4.98,
+    "max_rss_kib": 1558772
+  },
+  {
+    "implementation": "baseline",
+    "threads": 16,
+    "label": "synthetic-10000000",
+    "median_seconds": 19.44,
+    "min_seconds": 19.27,
+    "max_seconds": 19.76,
+    "max_rss_kib": 15200240
+  },
+  {
+    "implementation": "candidate",
+    "threads": 16,
+    "label": "synthetic-1000000",
+    "median_seconds": 7.79,
+    "min_seconds": 7.65,
+    "max_seconds": 7.88,
+    "max_rss_kib": 66884
+  },
+  {
+    "implementation": "candidate",
+    "threads": 16,
+    "label": "synthetic-10000000",
+    "median_seconds": 77.55,
+    "min_seconds": 73.32,
+    "max_seconds": 77.77,
+    "max_rss_kib": 67196
+  }
+]

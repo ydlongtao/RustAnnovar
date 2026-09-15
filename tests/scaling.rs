@@ -260,3 +260,24 @@ fn coding_genes_exclude_noncoding_isoforms_and_ncrna_exons_outrank_introns() {
         assert_eq!(&hit.values[..2], &[function.to_string(), gene.to_string()]);
     }
 }
+
+#[test]
+fn splice_window_adjacent_to_utr_reports_transcript_exon_and_utr_side() {
+    use rust_annovar::gene::GeneDatabase;
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("genes.txt");
+    fs::write(
+        &path,
+        "0\tNM_UTR\tchr1\t-\t0\t100\t0\t9\t2\t0,80,\t20,100,\t0\tGENE\n",
+    )
+    .unwrap();
+    let db = GeneDatabase::load(&path, None).unwrap();
+    let hit = db.annotate(
+        &Variant::new("1", 78, 79, "A", "C").unwrap(),
+        "refGene",
+        2,
+        1000,
+    );
+    assert_eq!(hit.values[0], "splicing");
+    assert_eq!(hit.values[2], "NM_UTR:exon1:UTR5");
+}

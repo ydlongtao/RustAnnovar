@@ -1,0 +1,181 @@
+{
+  "passed": false,
+  "rows": 21,
+  "differences": {
+    "AAChange.refGene": 5,
+    "GeneDetail.refGene": 4,
+    "ExonicFunc.refGene": 4
+  },
+  "examples": [
+    {
+      "row": 13,
+      "coordinate": [
+        "16",
+        "50763778",
+        "50763778",
+        "-",
+        "C"
+      ],
+      "field": "AAChange.refGene",
+      "actual": "NOD2:NM_001370466:exon11:c.2935_2936insC:p.L980Pfs,NOD2:NM_022162:exon11:c.3016_3017insC:p.L1007Pfs,NOD2:NM_001293557:exon10:c.2935_2936insC:p.L980Pfs",
+      "expected": "NOD2:NM_001293557:exon10:c.2936dupC:p.L980Pfs*2,NOD2:NM_001370466:exon11:c.2936dupC:p.L980Pfs*2,NOD2:NM_022162:exon11:c.3017dupC:p.L1007Pfs*2"
+    },
+    {
+      "row": 14,
+      "coordinate": [
+        "13",
+        "20763686",
+        "20763686",
+        "G",
+        "-"
+      ],
+      "field": "GeneDetail.refGene",
+      "actual": "reference_mismatch",
+      "expected": "."
+    },
+    {
+      "row": 14,
+      "coordinate": [
+        "13",
+        "20763686",
+        "20763686",
+        "G",
+        "-"
+      ],
+      "field": "ExonicFunc.refGene",
+      "actual": "unknown",
+      "expected": "frameshift deletion"
+    },
+    {
+      "row": 14,
+      "coordinate": [
+        "13",
+        "20763686",
+        "20763686",
+        "G",
+        "-"
+      ],
+      "field": "AAChange.refGene",
+      "actual": ".",
+      "expected": "GJB2:NM_004004:exon2:c.35delG:p.G12Vfs*2"
+    },
+    {
+      "row": 15,
+      "coordinate": [
+        "13",
+        "20797176",
+        "21105944",
+        "0",
+        "-"
+      ],
+      "field": "GeneDetail.refGene",
+      "actual": "unsupported_coding_boundary",
+      "expected": "."
+    },
+    {
+      "row": 15,
+      "coordinate": [
+        "13",
+        "20797176",
+        "21105944",
+        "0",
+        "-"
+      ],
+      "field": "ExonicFunc.refGene",
+      "actual": "unknown",
+      "expected": "startloss"
+    },
+    {
+      "row": 15,
+      "coordinate": [
+        "13",
+        "20797176",
+        "21105944",
+        "0",
+        "-"
+      ],
+      "field": "AAChange.refGene",
+      "actual": ".",
+      "expected": "GJB6:NM_001110219:exon1:c.1_786del:p.M1?,GJB6:NM_001110220:exon1:c.1_786del:p.M1?,GJB6:NM_001110221:exon1:c.1_786del:p.M1?,CRYL1:NM_001363647:exon1:c.-78_877del,GJB6:NM_001370090:exon1:c.1_786del:p.M1?,GJB6:NM_001370091:exon1:c.1_786del:p.M1?,GJB6:NM_001370092:exon1:c.1_786del:p.M1?,GJB6:NM_006783:exon1:c.1_786del:p.M1?,CRYL1:NM_015974:exon1:c.-62_1023del"
+    },
+    {
+      "row": 18,
+      "coordinate": [
+        "8",
+        "8887536",
+        "8887537",
+        "AG",
+        "GATT"
+      ],
+      "field": "ExonicFunc.refGene",
+      "actual": "frameshift substitution",
+      "expected": "stopgain"
+    },
+    {
+      "row": 18,
+      "coordinate": [
+        "8",
+        "8887536",
+        "8887537",
+        "AG",
+        "GATT"
+      ],
+      "field": "AAChange.refGene",
+      "actual": "ERI1:NM_001354636:exon8:c.697_698delinsGATT:p.R233Dfs,ERI1:NM_153332:exon7:c.1042_1043delinsGATT:p.R348Dfs,ERI1:NM_001354635:exon7:c.808_809delinsGATT:p.R270Dfs",
+      "expected": "ERI1:NM_001354635:exon7:c.808_809delinsGATT:p.R270Dfs*2,ERI1:NM_153332:exon7:c.1042_1043delinsGATT:p.R348Dfs*2,ERI1:NM_001354636:exon8:c.697_698delinsGATT:p.R233Dfs*2"
+    },
+    {
+      "row": 19,
+      "coordinate": [
+        "8",
+        "8887540",
+        "8887540",
+        "G",
+        "GGAA"
+      ],
+      "field": "GeneDetail.refGene",
+      "actual": "reference_mismatch",
+      "expected": "."
+    },
+    {
+      "row": 19,
+      "coordinate": [
+        "8",
+        "8887540",
+        "8887540",
+        "G",
+        "GGAA"
+      ],
+      "field": "ExonicFunc.refGene",
+      "actual": "unknown",
+      "expected": "nonframeshift substitution"
+    },
+    {
+      "row": 19,
+      "coordinate": [
+        "8",
+        "8887540",
+        "8887540",
+        "G",
+        "GGAA"
+      ],
+      "field": "AAChange.refGene",
+      "actual": ".",
+      "expected": "ERI1:NM_001354635:exon7:c.812delinsGGAA:p.R270_K271insR,ERI1:NM_153332:exon7:c.1046delinsGGAA:p.R348_K349insR,ERI1:NM_001354636:exon8:c.701delinsGGAA:p.R233_K234insR"
+    },
+    {
+      "row": 21,
+      "coordinate": [
+        "chr14",
+        "95602958",
+        "95602958",
+        "A",
+        "C"
+      ],
+      "field": "GeneDetail.refGene",
+      "actual": "NM_001271282",
+      "expected": "NM_001271282:exon1:UTR5"
+    }
+  ],
+  "ignored": "Otherinfo columns; order within Gene/AAChange comma lists only"
+}
