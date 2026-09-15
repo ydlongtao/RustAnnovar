@@ -25,6 +25,8 @@ Candidate RSS growth is 4.3%, below the 20% target, and peak RSS is below 20 GiB
 
 Candidate `5a7ea58` caches decoded filter blocks and reduces small-batch task overhead. Its 100,000-record smoke test at 16 threads measures 0.88 seconds (0.88–0.89), versus baseline 0.66 seconds (0.64–0.67), also failing the speed target. This short workload has substantial fixed costs. Results for 1/2/4/8/16/32 threads are in the [raw summary](benchmarks/2026-09-15/5a7ea58-smoke.json). Its 1M/10M run is recorded separately when complete. These timings do not include later gene-classification fixes.
 
+The initial scale campaign recorded one-minute system load between 2.52 and 8.70 and zero swap-in/out page increments during measured commands. The revised smoke campaign recorded load 2.67–3.03 and zero swap increments. These system-wide observations do not prove absence of per-core or storage contention. The [environment audit](benchmarks/2026-09-15/environment.json) retains CPU affinity and executable hashes.
+
 Perl speed on matching real GIAB inputs has not yet been measured in this campaign. No Perl acceleration factor is asserted.
 
 ## Correctness evidence and remaining gates

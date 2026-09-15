@@ -60,3 +60,13 @@ The harness serializes jobs with a lock, selects distinct physical cores on one 
 GIAB mode records missing inputs as not validated. It times refGene annotation and Perl separately and writes a field-level comparison report using `compare_annotations.py`. It does not silently count a missing database as passed. No global caches are cleared. A large machine does not waive the 20 GiB peak-RSS target or the <=20% growth target from 1M to 10M records.
 
 No 0.2 WGS speedup is claimed until these acceptance checks complete. No new public registry release should be inferred from the development version number.
+
+For detached submissions, use a unique job directory and keep the wrapper attached to its child:
+
+```bash
+nohup bash scripts/hpc_run.sh /DATABANK/users/hflt/RustAnnovar/runs/job-UNIQUE \
+  python3 scripts/hpc_benchmark.py --candidate-dir candidate-COMMIT --mode scale --wait \
+  > /DATABANK/users/hflt/RustAnnovar/runs/job-UNIQUE-launch.log 2>&1 < /dev/null &
+```
+
+The wrapper records runner/child PIDs, quoted command, logs, timestamps, status and exit code. Reusing a job directory fails. After reconnecting, inspect that directory before submitting again. `RUNNING` without a live matching process is indeterminate (for example after a host crash), not success; retain the directory and investigate. The benchmark's own lock also prevents simultaneous campaigns. Review compatibility reports even when the wrapper says `SUCCEEDED`.

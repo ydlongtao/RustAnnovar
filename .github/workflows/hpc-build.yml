@@ -29,7 +29,7 @@ jobs:
           cp target/release/rust-annovar dist/
           git rev-parse HEAD > dist/commit.txt
           rustc --version --verbose > dist/rustc.txt
-          sha256sum dist/rust-annovar > dist/SHA256SUMS
+          (cd dist && sha256sum rust-annovar > SHA256SUMS)
           tar -czf "$IMPLEMENTATION.tar.gz" -C dist .
       - uses: actions/upload-artifact@v4
         with:
