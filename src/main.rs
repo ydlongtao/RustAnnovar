@@ -1,10 +1,8 @@
 use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use rust_annovar::database::IndexManifest;
-use rust_annovar::io::{read_avinput, read_vcf, write_avinput};
-use rust_annovar::pipeline::{
-    Operation, annotate_table, resolve_protocols, write_annotated_vcf, write_table,
-};
+use rust_annovar::io::read_avinput;
+use rust_annovar::pipeline::{Operation, resolve_protocols};
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::io::{Read, Write};
@@ -65,6 +63,8 @@ impl From<OpArg> for Operation {
 
 #[derive(Args)]
 struct AnnotateArgs {
+    #[command(flatten)]
+    execution: rust_annovar::stream::ExecutionOptions,
     input: PathBuf,
     database: PathBuf,
     #[arg(short, long)]
@@ -83,6 +83,8 @@ struct AnnotateArgs {
 
 #[derive(Args)]
 struct TableArgs {
+    #[command(flatten)]
+    execution: rust_annovar::stream::ExecutionOptions,
     input: PathBuf,
     db_dir: PathBuf,
     #[arg(long)]
@@ -110,8 +112,19 @@ struct DbArgs {
 }
 #[derive(Subcommand)]
 enum DbCommand {
+    Validate {
+        database: PathBuf,
+        #[arg(long)]
+        full: bool,
+    },
     Index {
         database: PathBuf,
+        #[arg(long)]
+        tmp_dir: Option<PathBuf>,
+        #[arg(long)]
+        reference: Option<PathBuf>,
+        #[arg(long,value_enum,default_value_t=rust_annovar::stream::Normalization::Annovar)]
+        normalize: rust_annovar::stream::Normalization,
         #[arg(long, default_value = "generic")]
         kind: String,
         #[arg(short, long)]
@@ -163,8 +176,26 @@ fn main() {
 fn run() -> Result<()> {
     match Cli::parse().command {
         Command::Convert(args) => {
-            let document = read_vcf(&args.input)?;
-            write_avinput(&document.variants, &args.output, args.include_info)?;
+            use std::io::BufRead;
+            let mut output = rust_annovar::stream::AtomicOutput::new(&args.output)?;
+            for (i, line) in rust_annovar::io::open_reader(&args.input)?
+                .lines()
+                .enumerate()
+            {
+                let line = line?;
+                if line.starts_with('#') || line.trim().is_empty() {
+                    continue;
+                }
+                let (_, variants) = rust_annovar::io::parse_vcf_record(&line, i + 1, i)?;
+                for v in variants {
+                    let mut fields = v.avinput_fields().to_vec();
+                    if args.include_info {
+                        fields.extend(v.extra);
+                    }
+                    writeln!(output, "{}", fields.join("\t"))?;
+                }
+            }
+            output.commit()?;
         }
         Command::Annotate(args) => run_annotate(args, None)?,
         Command::CodingChange(mut args) => {
@@ -181,20 +212,22 @@ fn run() -> Result<()> {
 
 fn run_annotate(args: AnnotateArgs, _reserved: Option<()>) -> Result<()> {
     let operation = Operation::from(args.operation);
-    let document = args.vcf_input.then(|| read_vcf(&args.input)).transpose()?;
-    let variants = if let Some(doc) = &document {
-        doc.variants.clone()
-    } else {
-        read_avinput(&args.input)?
-    };
     let protocol = rust_annovar::pipeline::Protocol {
         name: args.protocol,
         operation,
         database: args.database,
         fasta: args.fasta,
     };
-    let result = annotate_table(&variants, &[protocol], &args.nastring)?;
-    write_table(&result, &args.output, false)
+    rust_annovar::stream::run(
+        &args.input,
+        args.vcf_input,
+        &[protocol],
+        &args.output,
+        None,
+        false,
+        &args.nastring,
+        &args.execution,
+    )
 }
 
 fn run_table(args: TableArgs) -> Result<()> {
@@ -204,27 +237,53 @@ fn run_table(args: TableArgs) -> Result<()> {
         .map(|value| Operation::parse(value))
         .collect::<Result<Vec<_>>>()?;
     let protocols = resolve_protocols(&args.db_dir, &args.build, &args.protocol, &operations)?;
-    let document = args.vcf_input.then(|| read_vcf(&args.input)).transpose()?;
-    let variants = if let Some(doc) = &document {
-        doc.variants.clone()
-    } else {
-        read_avinput(&args.input)?
-    };
-    let result = annotate_table(&variants, &protocols, &args.nastring)?;
-    write_table(&result, &args.output, args.csv)?;
-    if let (Some(document), Some(vcf_output)) = (&document, args.vcf_output) {
-        write_annotated_vcf(document, &result, &protocols, &vcf_output, &args.nastring)?;
-    }
-    Ok(())
+    rust_annovar::stream::run(
+        &args.input,
+        args.vcf_input,
+        &protocols,
+        &args.output,
+        args.vcf_output.as_deref(),
+        args.csv,
+        &args.nastring,
+        &args.execution,
+    )
 }
 
 fn run_db(command: DbCommand) -> Result<()> {
     match command {
+        DbCommand::Validate { database, full } => {
+            rust_annovar::disk_index::DiskFilter::open(&database, full)?;
+            println!("current");
+        }
         DbCommand::Index {
             database,
+            tmp_dir,
+            reference,
+            normalize,
             kind,
             output,
         } => {
+            if matches!(kind.as_str(), "filter" | "generic") && output.is_none() {
+                println!(
+                    "{}",
+                    rust_annovar::disk_index::DiskFilter::build_normalized(
+                        &database,
+                        tmp_dir.as_deref(),
+                        if normalize == rust_annovar::stream::Normalization::LeftAlign {
+                            Some(rust_annovar::reference::ReferenceGenome::open(
+                                reference
+                                    .as_deref()
+                                    .context("left-align requires --reference")?,
+                            )?)
+                        } else {
+                            None
+                        }
+                        .as_ref()
+                    )?
+                    .display()
+                );
+                return Ok(());
+            }
             let output = output.unwrap_or_else(|| database.with_extension("fai.json"));
             IndexManifest::build(&database, &kind)?.write(&output)?;
             println!("{}", output.display());

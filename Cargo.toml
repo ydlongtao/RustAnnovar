@@ -1,6 +1,11 @@
+[workspace]
+members = [".", "crates/*"]
+default-members = [".", "crates/rustannovar-cli"]
+resolver = "3"
+
 [package]
 name = "rust-annovar"
-version = "0.1.0-beta.1"
+version = "0.2.0-beta.2"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "A fast, auditable Rust implementation of core ANNOVAR workflows"
@@ -29,5 +34,6 @@ serde_json = "1"
 sha2 = "0.10"
 ureq = { version = "2", default-features = false, features = ["tls"] }
 
-[dev-dependencies]
 tempfile = "3"
+
+[dev-dependencies]

@@ -1,5 +1,7 @@
 # RustAnnovar
 
+**Current source version: `0.2.0-beta.2` (open beta).** The `main` branch includes the streaming WGS candidate and the isolated experimental **filter MVP** named `rustannovar`. The two executables have different scopes. See [architecture](ARCHITECTURE.md), [measured filter performance](PERFORMANCE.md), and [WGS acceptance status](docs/WGS_ENGINE.md). Versioned package links below refer to previously published artifacts; this source update does not certify WGS compatibility or publish new registry packages.
+
 [![CI](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml/badge.svg)](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/rust-annovar.svg)](https://rubygems.org/gems/rust-annovar)
 [![Open Beta](https://img.shields.io/badge/status-open%20beta-orange)](https://github.com/ydlongtao/RustAnnovar/issues)
@@ -34,6 +36,27 @@ RustAnnovar provides a native command-line interface and Rust library for annota
 - Build optional 1 Mb block indexes for plain-text filter databases.
 - Annotate input rows in parallel while retaining input order.
 - Extract reference sequences and select TSV rows by exact field value.
+
+## Experimental sorted-filter MVP
+
+Build the workspace with stable Rust:
+
+```bash
+cargo build --workspace --release --locked
+./target/release/rustannovar annotate \
+  --input crates/rustannovar-cli/tests/fixtures/exact.avinput \
+  --database crates/rustannovar-cli/tests/fixtures/exact-db.txt \
+  --output result.tsv --threads 4 --batch-size 100000 \
+  --report-json timing.json
+```
+
+Alternatively, install this experimental executable with `cargo install --path crates/rustannovar-cli --locked`. RubyGems currently installs the existing `rust-annovar` executable, not this new entry point.
+
+The MVP reads plain AVinput and plain ANNOVAR filter text, matches chromosome/start/end/REF/ALT, preserves input order and extra columns, and writes TSV. Use `--input -` for stdin, `--output -` for stdout, `--nastring NA` to change missing values, and `--quiet` to suppress the completion message. The default is one thread; batches default to 100,000 records with an approximate 64 MiB retained-input limit adjustable with `--batch-bytes`.
+
+SNVs, MNVs, simple insertions/deletions and mitochondrial chromosome aliases are tested. Strict validation rejects malformed coordinates, symbolic/multiple ALT values and inconsistent column widths. Query and database alleles must already use compatible AVinput representations. RefSeq, VCF conversion, region annotation and existing disk indexes remain available through `rust-annovar`; they are not part of this new MVP. Real ClinVar/dbSNP release certification, gnomAD/dbNSFP-specific adaptation, VCF, mmap and RADB are not claimed here.
+
+The new lookup path is measured separately from previous WGS experiments. See [PERFORMANCE.md](PERFORMANCE.md) for repeat counts, output comparisons, memory measurements and limitations.
 
 ## Runtime comparison
 

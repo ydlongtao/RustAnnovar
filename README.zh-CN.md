@@ -1,5 +1,9 @@
 # RustAnnovar
 
+**新增实验性过滤 MVP：** `rustannovar` 使用紧凑类型、按染色体排序的索引和批次流式处理；目前支持纯文本 AVinput → 过滤注释 TSV。它与既有 `rust-annovar` 命令并存。请参阅 [英文使用示例](README.md#experimental-sorted-filter-mvp)、[架构](ARCHITECTURE.md)及[实测性能](PERFORMANCE.md)。此次没有发布新安装包。
+
+**当前源码版本：`0.2.0-beta.2`（开放测试）。** `main` 已包含流式引擎、新索引和独立过滤 MVP，详见 [WGS 引擎改动及验收状态](docs/WGS_ENGINE.md)。下方带版本号的安装包链接仍指向此前发布的版本；源码更新不代表完成 WGS 验收或发布新注册中心安装包。
+
 [English](README.md) | **简体中文**
 
 [![CI](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml/badge.svg)](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml)

@@ -1,0 +1,29 @@
+{
+  "platform": "macOS-26.5-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "cpu": "Apple M1",
+  "logical_cpus": 8,
+  "compiler": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: aarch64-apple-darwin\nrelease: 1.96.0\nLLVM version: 22.1.2\n",
+  "source_commit": "354456b14a7522d46a9ac663418547de6644b373",
+  "source_dirty": true,
+  "worktree_diff_sha256": "c05dbc16b28845c5c8f19d38c4b99b6cd2a03afa614252b2db40efedf0df302f",
+  "binaries": {
+    "baseline": {
+      "path": "/Users/huangfulongtao/Documents/ChatGPT/Fast_annovar/target/release/rust-annovar",
+      "sha256": "99e5ced0713094afcb594f4d858f6bb238b29b4b0aae89989a89ddbc1ca14e44"
+    },
+    "native": {
+      "path": "/Users/huangfulongtao/Documents/ChatGPT/Fast_annovar/target/release/rustannovar",
+      "sha256": "d9f3ed84be54e350e9f95597274c0063ff4eee96b9218a875a55eaf80e7d234b"
+    }
+  },
+  "settings": {
+    "profile": "portable release, no target-cpu=native",
+    "batch_size": 100000,
+    "cache": "first run recorded separately, five warm runs by default; caches not cleared",
+    "database": "100K in-memory text rows; no disk index for either path",
+    "thread_affinity": "not pinned; workstation scheduler",
+    "repeats": 5
+  },
+  "database_sha256": "b0efe1be2d68b0a80c05f0037112fce977fbe8efc530489ab1fb47ddba5e3c61"
+}

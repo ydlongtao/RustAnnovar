@@ -1,0 +1,37 @@
+name: HPC benchmark binaries
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/wgs-engine]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        implementation: [baseline, candidate]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ matrix.implementation == 'baseline' && 'deb7a25f1ae178ad8c6060629b1f75f19bec834d' || github.sha }}
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: hpc-${{ matrix.implementation }}
+      - run: cargo test --all-features
+      - run: cargo build --release --locked
+      - name: Package binary and provenance
+        env:
+          IMPLEMENTATION: ${{ matrix.implementation }}
+        run: |
+          mkdir dist
+          cp target/release/rust-annovar dist/
+          git rev-parse HEAD > dist/commit.txt
+          rustc --version --verbose > dist/rustc.txt
+          (cd dist && sha256sum rust-annovar > SHA256SUMS)
+          tar -czf "$IMPLEMENTATION.tar.gz" -C dist .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hpc-${{ matrix.implementation }}
+          path: '*.tar.gz'

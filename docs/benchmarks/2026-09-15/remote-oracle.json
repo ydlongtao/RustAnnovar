@@ -1,0 +1,22 @@
+[
+  {
+    "path": "annotate_variation.pl",
+    "size": 228730,
+    "sha256": "9840d7b4451d79a04c0bd15ce364c4707ddb355b3d796f7b4b47b6e8a850580a"
+  },
+  {
+    "path": "table_annovar.pl",
+    "size": 42936,
+    "sha256": "a3c67e1eb9b8c966e1224539432bab96c0b0003c854445f8dd7775156abdcf4b"
+  },
+  {
+    "path": "humandb/hg19_refGene.txt",
+    "size": 24058653,
+    "sha256": "1c361d4ed4566c6f05a097c6c4a9fd0e67c72ef07ad018dff7cbcaa761209a02"
+  },
+  {
+    "path": "humandb/hg19_refGeneMrna.fa",
+    "size": 283535031,
+    "sha256": "1517d7ef0dde02d377301664cd0c92ff551e499921378f48a4f63fcbfa13aa9b"
+  }
+]

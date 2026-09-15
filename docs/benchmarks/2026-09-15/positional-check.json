@@ -1,0 +1,10 @@
+{
+  "scope": "Positional stress test only: 50,000 chr1 sites, start=1000000+i*100, arbitrary A>G. REF is not validated against the genome; protein consequences are not assessed.",
+  "rows": 50000,
+  "differences": {
+    "Func.refGene": 0,
+    "Gene.refGene": 0
+  },
+  "input_sha256": "4029bcccac2912e618d52c723b7a79a8ac815a1df96b59e3bb819085235433cf",
+  "model_manifest": "docs/WGS_BASELINE.json"
+}
