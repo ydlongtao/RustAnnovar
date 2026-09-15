@@ -2,77 +2,113 @@
 
 [![CI](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml/badge.svg)](https://github.com/ydlongtao/RustAnnovar/actions/workflows/ci.yml)
 [![Open Beta](https://img.shields.io/badge/status-open%20beta-orange)](https://github.com/ydlongtao/RustAnnovar/issues)
-[![Rust](https://img.shields.io/badge/Rust-1.85%2B-000000?logo=rust)](https://www.rust-lang.org/)
+[![Rust](https://img.shields.io/badge/Rust-stable-000000?logo=rust)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](LICENSE-MIT)
 
-**A high-performance ANNOVAR-compatible variant annotation engine written in Rust.**
+**English** | [简体中文](README.zh-CN.md)
 
-`RustAnnovar` 是一个使用 Rust 编写的高性能基因组变异注释工具。它直接读取现有 ANNOVAR `humandb` 数据文件，支持 VCF/AVinput 转换、基因注释、区域注释、过滤注释、多数据库汇总和 VCF 回写，并提供面向大型数据库的索引能力。
+**A variant annotation engine written in Rust, with support for ANNOVAR database formats.**
+
+RustAnnovar provides a native command-line interface and Rust library for annotating genomic variants. It reads supported existing `humandb` files and combines three core operations: exact allele matching, genomic interval overlap, and transcript consequence calculation. Development prioritizes human hg19/hg38 workflows.
+
+## Important statements
 
 > [!WARNING]
-> **本软件正在开放测试（Open Beta）。** 当前版本适合功能验证、性能测试和非关键研究流程。SNV 核心后果、generic filter 和 GFF3 区域注释已经与本地 ANNOVAR 基线核对；复杂 Indel、完整 HGVS、ncRNA 分类细节和部分历史数据库协议仍在完善。请在研究或临床决策前用原版 ANNOVAR 或其他成熟工具复核结果，并通过 [Issues](https://github.com/ydlongtao/RustAnnovar/issues) 报告差异。
+> **RustAnnovar is currently in open beta.** It is intended for evaluation, compatibility testing, and research workflow development. It is not yet a complete replacement for ANNOVAR or a clinically validated tool. Validate results with established tools before relying on them for consequential decisions.
 
-## 为什么使用 RustAnnovar
+- **Compatibility is a goal, not a guarantee.** Selected SNV consequences, generic filter matches, and GFF3 overlap results have been checked against a local ANNOVAR baseline. Complex indels, complete HGVS notation, ncRNA classification, transcript ordering, and specialized database protocols remain incomplete.
+- **Independent implementation.** RustAnnovar is not affiliated with or endorsed by ANNOVAR. The annotation engine does not invoke Perl.
+- **Bring your own databases.** ANNOVAR scripts and registered databases are not distributed here. Obtain databases separately and comply with their licenses. The bundled demonstration data are entirely synthetic.
+- **Performance results have a limited scope.** The measurements below describe specific local workloads; they do not establish equivalent results or a universal speedup on real WES/WGS datasets.
 
-- **原生 Rust 引擎**：核心注释流程不调用 Perl，提供内存安全和稳定并行执行。
-- **复用 humandb**：按 `hg19_refGene.txt`、`hg38_clinvar.txt` 等 ANNOVAR 命名方式发现数据库。
-- **三类核心查询**：精确变异匹配、基因组区间重叠、转录本与编码后果计算。
-- **常用输入输出**：读取 VCF、gzip VCF 和 AVinput，输出 TSV、CSV 或带 INFO 注释的 VCF。
-- **大型数据库索引**：过滤数据库可建立 1 Mb 分块索引，只读取输入位点涉及的数据区块。
-- **可审计兼容性**：仓库包含自动化测试和与注册版 ANNOVAR 对照的回归测试框架。
+## Features
 
-## 运行速度
+- Read VCF, gzip-compressed VCF, and AVinput; split multiallelic VCF records.
+- Match variants by chromosome, coordinates, reference allele, and alternate allele.
+- Query supported BED-style, UCSC-style, and GFF3 region files.
+- Read refGene-style transcript models and calculate coding SNV consequences with transcript FASTA.
+- Combine databases into TSV or CSV output, or add annotations to VCF INFO while preserving sample columns.
+- Build optional 1 Mb block indexes for plain-text filter databases.
+- Annotate input rows in parallel while retaining input order.
+- Extract reference sequences and select TSV rows by exact field value.
 
-在 Apple M1 8 核、hg19 refGene、热文件缓存、release 构建条件下，多次运行取墙钟时间中位数：
+## Runtime comparison
 
-| 场景 | 原版 ANNOVAR（Perl） | RustAnnovar（Rust） | 加速比 |
+Local measurements used an **Apple M1 (8 cores), macOS 26.5, Perl 5.34.1**, the same hg19 refGene database and transcript FASTA, and an optimized Rust release build. Each workload was warmed up before collecting the median wall-clock time over five or seven runs. Timings include process startup, database loading, annotation, and output writing.
+
+| Workload | Original ANNOVAR (Perl) | Rust implementation | Speedup |
 |---|---:|---:|---:|
-| 13 条已核对 SNV | 2.40 s | 0.29 s | **8.28×** |
-| 26,000 行 SNV，默认设置 | 4.68 s | 0.37 s | **12.65×** |
-| 26,000 行 SNV，单线程 | 4.70 s | 0.47 s | **10.00×** |
-| 21 个变异查询 25,688 个 GFF3 区域 | 0.14 s | 0.01 s | **约 14×** |
+| 13 SNVs from the bundled ANNOVAR example | 2.40 s | 0.29 s | **8.28×** |
+| 26,000 SNV rows, default settings | 4.68 s | 0.37 s | **12.65×** |
+| 26,000 SNV rows, single thread | 4.70 s | 0.47 s | **10.00×** |
+| 21 variants against 25,688 GFF3 regions | 0.14 s | 0.01 s | **Approximately 14×** |
 
-26,000 行测试中，最大常驻内存由 400 MiB 降至 360.3 MiB，减少约 9.9%。该输入由 13 条已经核对的 SNV 重复构成，用于稳定测量启动、注释和输出成本；它不代表真实 WES 的独立位点分布。完整环境、原始计时和兼容性边界见 [性能报告](docs/BENCHMARK_2026-09-14.md)。
+A separate memory measurement on the 26,000-row workload reported maximum resident memory of **400 MiB for Perl** and **360.3 MiB for Rust**, approximately 9.9% lower.
 
-## 安装
+**How to interpret these numbers:**
 
-### 环境要求
+- The 26,000-row input repeats 13 SNVs 2,000 times. It is a repeated-record workload, not 26,000 independent variants or a representative WES sample.
+- The checked functional and coding SNV fields agree in this example, allowing transcript-order differences. Complete output equivalence has not been established: some UTR/splice `GeneDetail` fields differ.
+- GFF3 hit contents agree in the example, but Perl emits only hits and Rust emits all input rows. The short runtime and 0.01-second timer resolution make the ratio approximate.
+- A separate 50,000-position synthetic test exposed classification and gene-field differences. Its speedup must not be presented as an equivalent-output benchmark.
+- These are historical measurements from the initial implementation, not a benchmark automatically rerun for every commit. See the [detailed benchmark report (Chinese)](docs/BENCHMARK_2026-09-14.md) for environment and compatibility findings.
 
-- Linux 或 macOS；Windows 可从源码构建
-- Rust 1.85 或更高版本
-- 用户自行取得的 ANNOVAR `humandb` 数据库；演示命令不需要注册数据库
+## Installation
 
-没有 Rust 时，先安装官方工具链：
+### Requirements
+
+Use the **current stable Rust toolchain** and a native C compiler/linker when building from source. Public CI checks Linux and macOS. A Windows release build workflow is also configured; check release assets for actually available binaries.
+
+Perl is not required to run RustAnnovar. Real annotation requires your own matching database files; the quick-start example does not.
+
+### Option 1: Install from GitHub
+
+If Rust is not installed, install its toolchain using rustup on Linux/macOS:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source "$HOME/.cargo/env"
 ```
 
-### 从 GitHub 安装
+Install the current repository version:
 
 ```bash
 cargo install --git https://github.com/ydlongtao/RustAnnovar.git --locked
 rust-annovar --version
 ```
 
-### 克隆源码构建
+For a fixed open-beta version, add `--tag v0.1.0-beta.1`. Cargo installs the executable in `~/.cargo/bin`; ensure that directory is in your `PATH`.
+
+### Option 2: Build from source
 
 ```bash
 git clone https://github.com/ydlongtao/RustAnnovar.git
 cd RustAnnovar
 cargo build --release --locked
-cargo test --all-features
 ./target/release/rust-annovar --version
+
+# Optional: install the local checkout into ~/.cargo/bin
+cargo install --path . --locked
 ```
 
-## 五分钟快速体验
+### Option 3: Download a release binary
 
-仓库包含一个完全合成的小型 VCF 和过滤数据库：
+Visit [Releases](https://github.com/ydlongtao/RustAnnovar/releases) and choose an asset matching your operating system and processor. The initial `v0.1.0-beta.1` release includes an Apple Silicon macOS archive and `SHA256SUMS`. Other platforms can build from source if no matching asset is available.
+
+After downloading both files to the same directory on macOS:
 
 ```bash
-rust-annovar table \
-  examples/demo.vcf examples/humandb \
+shasum -a 256 -c SHA256SUMS
+tar -xzf RustAnnovar-v0.1.0-beta.1-aarch64-apple-darwin.tar.gz
+./RustAnnovar-v0.1.0-beta.1-aarch64-apple-darwin/rust-annovar --version
+```
+
+## Quick start
+
+Clone the repository if you installed only the executable; example files are located in the source checkout. Run the following from the repository root after installing `rust-annovar`:
+
+```bash
+rust-annovar table examples/demo.vcf examples/humandb \
   --build hg38 \
   --protocol demo \
   --operation f \
@@ -83,11 +119,23 @@ rust-annovar table \
 cat demo.multianno.tsv
 ```
 
-预期第一条变异命中 `Pathogenic`，第二条变异显示缺失值 `.`。
+If you built without installing, replace `rust-annovar` with `./target/release/rust-annovar` in all commands.
 
-## 使用现有 humandb
+Expected table:
 
-目录按 ANNOVAR 的文件名规则组织：
+```text
+Chr  Start  End  Ref  Alt  CLNSIG.demo  SOURCE.demo
+1    10     10   A    C    Pathogenic   Synthetic_demo
+1    25     25   G    A    .            .
+```
+
+The actual file is tab-delimited. `Pathogenic` is a fabricated demonstration label, not a clinical assertion about this position. The second record has no database match. The annotated VCF retains the original sample genotype columns.
+
+## Usage guide
+
+### 1. Prepare matching databases
+
+For `table`, files are resolved as `<database-directory>/<build>_<protocol>.txt`. Gene annotation also looks for `<build>_<protocol>Mrna.fa`.
 
 ```text
 humandb/
@@ -97,7 +145,56 @@ humandb/
 └── hg38_clinvar.txt
 ```
 
-组合基因、区域和过滤注释：
+Use the same genome assembly for inputs and databases. `--build` selects filenames; it does not perform liftover or verify assembly identity. Substitute the actual protocol names installed on your machine, including version suffixes. The example filenames do not imply that every database release or specialized schema has been validated.
+
+Gene annotation expects a **transcript FASTA** with matching transcript identifiers. The `sequence` command instead takes a **genomic reference FASTA**. Without transcript sequences, coding consequences may be unavailable.
+
+### 2. Convert VCF to AVinput
+
+```bash
+rust-annovar convert sample.vcf.gz \
+  --include-info \
+  --output sample.avinput
+```
+
+Conversion splits alternate alleles and removes common VCF indel anchor bases. It does not establish full reference-aware normalization compatibility across databases.
+
+AVinput uses five required fields: `Chr Start End Ref Alt`, followed by optional extra columns. Substitution/deletion coordinates are one-based and inclusive. Insertions use `-` as the reference allele and an insertion anchor coordinate. Internally, RustAnnovar uses zero-based, half-open intervals with separate insertion handling.
+
+### 3. Annotate one database
+
+**Filter annotation** matches the complete variant key:
+
+```bash
+rust-annovar annotate sample.avinput humandb/hg38_clinvar.txt \
+  --operation filter --protocol clinvar \
+  --output sample.clinvar.tsv
+```
+
+Generic filter files use `Chr`, `Start`, `End`, `Ref`, `Alt`, then annotation columns. Query and database alleles must use compatible representations.
+
+**Region annotation** reports interval overlaps:
+
+```bash
+rust-annovar annotate sample.avinput humandb/hg38_cytoBand.txt \
+  --operation region --protocol cytoBand \
+  --output sample.cytoband.tsv
+```
+
+BED-style regions use zero-based, half-open coordinates; GFF3 uses one-based, inclusive coordinates. GFF3 support here is for region overlap, not GFF3 transcript-model ingestion.
+
+**Gene annotation** reads refGene-style models:
+
+```bash
+rust-annovar annotate sample.avinput humandb/hg38_refGene.txt \
+  --operation gene --protocol refGene \
+  --fasta humandb/hg38_refGeneMrna.fa \
+  --output sample.refgene.tsv
+```
+
+The main columns are `Func.refGene`, `Gene.refGene`, `GeneDetail.refGene`, `ExonicFunc.refGene`, and `AAChange.refGene`. Add `--vcf-input` when passing a VCF directly to `annotate`.
+
+### 4. Combine gene, region, and filter annotations
 
 ```bash
 rust-annovar table sample.vcf humandb \
@@ -109,85 +206,63 @@ rust-annovar table sample.vcf humandb \
   --vcf-output sample.hg38_multianno.vcf
 ```
 
-`--protocol` 与 `--operation` 必须一一对应；`g`、`r`、`f` 分别代表 gene、region 和 filter。输出列按照协议请求顺序排列，VCF 输出保留原始样本与 FORMAT 字段。
+Protocols and operations must correspond one-to-one. `g`, `r`, and `f` mean gene, region, and filter. Database columns follow the requested protocol order. Missing values default to `.` and can be changed with `--nastring`.
 
-## 常用命令
+Use `--csv` for CSV table output. Use `--vcf-output` together with `--vcf-input` for an annotated VCF. Added INFO fields use `FA_<protocol>` identifiers; this schema differs from original ANNOVAR VCF output. Original sample and FORMAT columns are retained.
 
-### VCF 转换为 AVinput
-
-```bash
-rust-annovar convert sample.vcf.gz \
-  --include-info \
-  --output sample.avinput
-```
-
-程序会拆分多等位记录，并处理常见 VCF Indel 的锚碱基。
-
-### 单个过滤数据库
-
-```bash
-rust-annovar annotate sample.avinput humandb/hg38_clinvar.txt \
-  --operation filter \
-  --protocol clinvar \
-  --output sample.clinvar.tsv
-```
-
-过滤注释要求染色体、坐标、Ref 和 Alt 精确匹配。
-
-### 单个区域数据库
-
-```bash
-rust-annovar annotate sample.avinput humandb/hg38_cytoBand.txt \
-  --operation region \
-  --protocol cytoBand \
-  --output sample.cytoband.tsv
-```
-
-### refGene 基因注释
-
-```bash
-rust-annovar annotate sample.avinput humandb/hg38_refGene.txt \
-  --operation gene \
-  --protocol refGene \
-  --fasta humandb/hg38_refGeneMrna.fa \
-  --output sample.refgene.tsv
-```
-
-### 为大型过滤数据库建立索引
+### 5. Manage filter database indexes
 
 ```bash
 rust-annovar db index humandb/hg38_dbnsfp.txt --kind filter
 rust-annovar db check humandb/hg38_dbnsfp.fai.json
+rust-annovar db list humandb --build hg38
 ```
 
-源数据库变更后，`db check` 会报告索引过期。gzip 数据库会安全回退到完整加载。
+The default sidecar records 1 Mb block byte ranges and source metadata. Queries can load relevant ranges from plain-text filter files. Missing or detected-stale indexes and gzip files fall back to full loading. Rebuild indexes after changing or relocating a database. Source checks use size, modification time, and a prefix hash, not a full-file integrity check.
 
-### 提取序列和筛选结果
+`db download <URL> <OUTPUT> --sha256 <EXPECTED_SHA256>` downloads a file from a supplied public URL and optionally validates its full checksum. It does not implement the registered ANNOVAR download catalog.
+
+### 6. Extract sequences and filter tables
 
 ```bash
 rust-annovar sequence regions.avinput reference.fa --output regions.fa
 
 rust-annovar reduce sample.hg38_multianno.tsv \
-  --column Func.refGene \
-  --equals exonic \
+  --column Func.refGene --equals exonic \
   --output sample.exonic.tsv
 ```
 
-运行 `rust-annovar <子命令> --help` 可查看完整参数。
+Sequence extraction currently loads the reference FASTA into memory. `reduce` accepts a tab-delimited table and performs exact string equality; it is not a numeric threshold or expression engine.
 
-## 子命令概览
+`coding-change` is a convenience entry point for gene annotation with the same arguments as `annotate`. It is not a complete replacement for the original `coding_change.pl` protein FASTA workflow.
 
-| 子命令 | 功能 |
+### 7. Control parallelism
+
+```bash
+RAYON_NUM_THREADS=1 rust-annovar table sample.avinput humandb \
+  --build hg38 --protocol refGene --operation g \
+  --output sample.single-thread.tsv
+```
+
+Set `RAYON_NUM_THREADS` to the desired worker count. Without it, Rayon selects the thread pool size automatically. Input and result tables are currently held in memory, so large WGS workloads still require memory planning and validation.
+
+## Command reference
+
+| Command | Purpose |
 |---|---|
-| `convert` | VCF/gzip VCF 转换为 AVinput |
-| `annotate` | 执行单个 gene、region 或 filter 注释 |
-| `table` | 组合多个数据库并输出 TSV、CSV 或 VCF |
-| `db` | 建立和校验索引、列出或下载公开数据库 |
-| `sequence` | 按 AVinput 区间提取 FASTA 序列 |
-| `coding-change` | 输出基因与编码后果注释 |
-| `reduce` | 按指定注释列筛选多注释表格 |
+| `convert` | Convert VCF or gzip VCF to AVinput |
+| `annotate` | Annotate with one gene, region, or filter database |
+| `table` | Combine databases into TSV, CSV, and optionally VCF |
+| `db index/check/list/download` | Manage local database metadata and downloads |
+| `sequence` | Extract genomic FASTA intervals |
+| `coding-change` | Run gene consequence annotation |
+| `reduce` | Select TSV rows by exact column value |
 
-## 测试与兼容性
+Run `rust-annovar --help` or `rust-annovar <command> --help` for available options.
+
+## Validation and feedback
+
+Run public checks from the source directory:
 
 ```bash
 cargo fmt -- --check
@@ -195,23 +270,18 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-features
 ```
 
-如果本机已有注册版 ANNOVAR，可运行对照测试：
+Optional compatibility tests require the registered installation at **`annovar/` in the repository root**, including its bundled example and hg19 databases:
 
 ```bash
-ANNOVAR_HOME=/path/to/annovar \
-  cargo test --test annovar_compat -- --ignored
+cargo test --test annovar_compat -- --ignored
 ```
 
-已实现范围和已知差异见 [兼容性状态](docs/COMPATIBILITY.md)。发现差异时，请在 issue 中同时提供最小化输入、数据库版本、构建版本、原版命令和两份输出；请勿上传受许可限制的数据库或可识别个体的基因组数据。
+These tests check selected fields against saved Perl outputs and expected example hits; they do not validate every ANNOVAR feature. To regenerate the saved baseline, use `ANNOVAR_HOME=/path/to/annovar scripts/capture_perl_baseline.sh`. The test loader itself does not read `ANNOVAR_HOME`.
 
-## ANNOVAR 与数据库说明
+See [compatibility status (Chinese)](docs/COMPATIBILITY.md). Report reproducible differences through [GitHub Issues](https://github.com/ydlongtao/RustAnnovar/issues), including the software version, genome build, database version, commands, a minimal input, and expected versus observed output. Do not include restricted databases, credentials, or identifiable genomic data.
 
-本项目是独立实现，不隶属于 ANNOVAR，也不分发 ANNOVAR Perl 程序或注册数据库。ANNOVAR 及相关数据库可能有各自的学术或商业许可；用户需要自行确认使用资格。项目名称用于说明数据格式和结果兼容目标。
+## License and acknowledgments
 
-## 许可证
+The project source is offered under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option. This does not extend to third-party databases or ANNOVAR software.
 
-源代码采用 [MIT](LICENSE-MIT) 或 [Apache-2.0](LICENSE-APACHE) 双许可证。用户可任选其一。
-
-## 致谢
-
-项目结构和公开文档风格参考了 [Huang-lab/fastVEP](https://github.com/Huang-lab/fastVEP)。感谢 ANNOVAR 作者和变异注释社区建立的数据格式、数据库与验证案例。
+Repository presentation was inspired by [Huang-lab/fastVEP](https://github.com/Huang-lab/fastVEP). We acknowledge the ANNOVAR authors and the variant annotation community for the formats and resources underlying compatibility evaluation.
