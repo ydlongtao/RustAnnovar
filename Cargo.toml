@@ -1,3 +1,8 @@
+[workspace]
+members = [".", "crates/*"]
+default-members = [".", "crates/rustannovar-cli"]
+resolver = "3"
+
 [package]
 name = "rust-annovar"
 version = "0.2.0-beta.1"

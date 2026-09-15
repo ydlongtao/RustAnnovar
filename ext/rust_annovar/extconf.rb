@@ -23,7 +23,7 @@ File.write(
   "Makefile",
   <<~MAKEFILE
     all:
-    \tCARGO_TARGET_DIR=#{target_arg} #{cargo_arg} build --release --locked --manifest-path #{manifest_arg}
+    \tCARGO_TARGET_DIR=#{target_arg} #{cargo_arg} build --release --locked --bin rust-annovar --manifest-path #{manifest_arg}
 
     install:
     \t#{ruby_arg} -rfileutils -e 'FileUtils.mkdir_p(ARGV.fetch(0)); FileUtils.install(ARGV.fetch(1), ARGV.fetch(0), mode: 0755)' #{install_arg} #{binary_arg}

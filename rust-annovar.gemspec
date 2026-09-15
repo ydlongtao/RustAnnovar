@@ -30,9 +30,14 @@ Gem::Specification.new do |spec|
     "ext/rust_annovar/extconf.rb",
     "lib/**/*.rb",
     "src/**/*.rs",
+    "crates/**/Cargo.toml",
+    "crates/**/src/**/*.rs",
     "Cargo.toml",
     "Cargo.lock",
     "README.md",
+    "ARCHITECTURE.md",
+    "PERFORMANCE.md",
+    "CHANGELOG.md",
     "LICENSE-MIT",
     "LICENSE-APACHE"
   ]

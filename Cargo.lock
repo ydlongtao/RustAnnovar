@@ -564,6 +564,53 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustannovar-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "rustannovar-core",
+ "rustannovar-db",
+ "rustannovar-filter",
+ "rustannovar-vcf",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
+name = "rustannovar-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+]
+
+[[package]]
+name = "rustannovar-db"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "rustannovar-core",
+]
+
+[[package]]
+name = "rustannovar-filter"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "rayon",
+ "rustannovar-core",
+ "rustannovar-db",
+]
+
+[[package]]
+name = "rustannovar-vcf"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "rustannovar-core",
+]
+
+[[package]]
 name = "rustix"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
