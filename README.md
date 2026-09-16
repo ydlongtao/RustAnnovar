@@ -16,6 +16,37 @@
 
 RustAnnovar provides a native command-line interface and Rust library for annotating genomic variants. It reads supported existing `humandb` files and combines three core operations: exact allele matching, genomic interval overlap, and transcript consequence calculation. Development prioritizes human hg19/hg38 workflows.
 
+## Software architecture
+
+The current `rust-annovar` frontend connects three annotation engines through streaming batches and ordered output.
+
+```mermaid
+flowchart TB
+    R["RustANNOVAR"] --> I["VCF / AVinput"]
+    I --> B["Streaming variant batches"]
+    B --> T["Transcript Engine"]
+    B --> N["Interval Engine"]
+    B --> V["Variant Engine"]
+    TD["refGene-style models<br/>Transcript FASTA"] --> T
+    ND["BED-like / UCSC regions<br/>GFF3 regions"] --> N
+    VD["ANNOVAR-format filter databases<br/>dbNSFP / gnomAD / ClinVar / dbSNP"] --> V
+    T --> C["Consequence"]
+    N --> O["Overlap"]
+    V --> L["Exact allele lookup"]
+    C --> M["Ordered annotation merge"]
+    O --> M
+    L --> M
+    M --> W["Output<br/>TSV / CSV / annotated VCF"]
+    classDef engine fill:#e8f1ff,stroke:#3167a8,color:#183657;
+    classDef data fill:#f1f7ed,stroke:#5b8247,color:#29421b;
+    classDef output fill:#fff2df,stroke:#b57b24,color:#5b3b0f;
+    class T,N,V engine;
+    class TD,ND,VD data;
+    class W output;
+```
+
+Transcript annotation currently reads refGene-style models and transcript FASTA. Direct GFF/GTF transcript ingestion is planned; current GFF3 support is for region overlap. Named filter databases must be supplied in compatible ANNOVAR text format; version-specific certification remains pending. The separate experimental `rustannovar` MVP implements only the Variant Engine path for plain AVinput and in-memory filter databases. See [ARCHITECTURE.md](ARCHITECTURE.md) for implementation details and limitations.
+
 ## Important statements
 
 > [!WARNING]

@@ -19,6 +19,37 @@
 > [!WARNING]
 > **本软件正在开放测试（Open Beta）。** 当前版本适合功能验证、性能测试和非关键研究流程。SNV 核心后果、generic filter 和 GFF3 区域注释已经与本地 ANNOVAR 基线核对；复杂 Indel、完整 HGVS、ncRNA 分类细节和部分历史数据库协议仍在完善。请在研究或临床决策前用原版 ANNOVAR 或其他成熟工具复核结果，并通过 [Issues](https://github.com/ydlongtao/RustAnnovar/issues) 报告差异。
 
+## 软件架构
+
+当前 `rust-annovar` 通过流式批次连接转录本、区间和变异匹配三类引擎，并按输入顺序汇总输出。
+
+```mermaid
+flowchart TB
+    R["RustANNOVAR"] --> I["VCF / AVinput"]
+    I --> B["Streaming variant batches"]
+    B --> T["Transcript Engine"]
+    B --> N["Interval Engine"]
+    B --> V["Variant Engine"]
+    TD["refGene-style models<br/>Transcript FASTA"] --> T
+    ND["BED-like / UCSC regions<br/>GFF3 regions"] --> N
+    VD["ANNOVAR-format filter databases<br/>dbNSFP / gnomAD / ClinVar / dbSNP"] --> V
+    T --> C["Consequence"]
+    N --> O["Overlap"]
+    V --> L["Exact allele lookup"]
+    C --> M["Ordered annotation merge"]
+    O --> M
+    L --> M
+    M --> W["Output<br/>TSV / CSV / annotated VCF"]
+    classDef engine fill:#e8f1ff,stroke:#3167a8,color:#183657;
+    classDef data fill:#f1f7ed,stroke:#5b8247,color:#29421b;
+    classDef output fill:#fff2df,stroke:#b57b24,color:#5b3b0f;
+    class T,N,V engine;
+    class TD,ND,VD data;
+    class W output;
+```
+
+转录本注释目前读取 refGene 风格模型和转录本 FASTA；直接读取 GFF/GTF 转录本模型属于后续计划，现有 GFF3 支持用于区域重叠。过滤数据库需使用兼容的 ANNOVAR 文本格式，各数据库版本的专用验收仍待完成。独立实验性 `rustannovar` MVP 仅实现纯文本 AVinput 与内存过滤数据库的变异匹配路径。实现细节见 [ARCHITECTURE.md](ARCHITECTURE.md)。
+
 ## 为什么使用 RustAnnovar
 
 - **原生 Rust 引擎**：核心注释流程不调用 Perl，提供内存安全和稳定并行执行。
