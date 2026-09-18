@@ -16,7 +16,7 @@ class DownloadTests(unittest.TestCase):
 
         class Handler(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
-                start, end = map(int, self.headers["Range"].removeprefix("bytes=").split("-"))
+                start, end = map(int, self.headers["Range"][6:].split("-"))
                 requests.append((start, end))
                 self.send_response(206)
                 self.send_header("Content-Range", f"bytes {start}-{end}/{len(data)}")

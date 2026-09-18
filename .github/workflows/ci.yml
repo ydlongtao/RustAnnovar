@@ -20,6 +20,8 @@ jobs:
       - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
       - run: cargo test --workspace --all-features
       - run: cargo build --workspace --release --locked
+      - name: Verify resumable CADD download reliability
+        run: python3 scripts/test_cadd_download.py
 
   rubygem:
     runs-on: ubuntu-latest

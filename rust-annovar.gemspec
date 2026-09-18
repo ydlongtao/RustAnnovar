@@ -38,6 +38,8 @@ Gem::Specification.new do |spec|
     "ARCHITECTURE.md",
     "PERFORMANCE.md",
     "CHANGELOG.md",
+    "docs/CADD.md",
+    "scripts/*cadd*",
     "LICENSE-MIT",
     "LICENSE-APACHE"
   ]
