@@ -204,6 +204,10 @@ impl Database {
         // rather than repeatedly scanning it for individual sparse WGS calls.
         for v in variants {
             if is_snv(v) && self.chroms.contains_key(&v.chrom) {
+                ensure!(
+                    v.end <= 536_870_912,
+                    "SNV position exceeds Tabix coordinate limit"
+                );
                 positions.entry(v.chrom.clone()).or_default().insert(v.end);
                 bins.insert((v.chrom.clone(), (v.end - 1) / 16384));
             }

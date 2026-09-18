@@ -54,6 +54,13 @@ fn bin_queries_preserve_boundaries_order_and_duplicates_across_threads() {
     variants.push(variants[0].clone());
     expected.push(expected[0].clone());
     let db = rust_annovar::cadd::Database::open(&path).unwrap();
+    assert!(
+        db.batch(
+            &[Variant::new("1", u64::MAX - 1, u64::MAX, "A", "C").unwrap()],
+            "."
+        )
+        .is_err()
+    );
     for threads in [1, 4] {
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(threads)
