@@ -22,8 +22,9 @@ This path adds `CADD_status.cadd17`: `scored`, `reference_mismatch`,
 receives a state. Missing scores are not invented. `--cadd-require-all` fails
 if any SNV is unscored, including ambiguous N alleles and preserves existing file outputs; stdout
 cannot be rolled back. The JSON report contains per-protocol `cadd_counts`
-by state. Non-SNV alleles are reported but do not fail this SNV-only policy. Nearby positions are coalesced into bounded query windows (maximum span
-4,096 bases, maximum gap 32 bases). Full WGS throughput remains unmeasured.
+by state. Non-SNV alleles are reported but do not fail this SNV-only policy. Each touched 16,384-base Tabix bin is queried once per batch. Local bins
+use the configured Rayon pool; remote queries remain sequential with a bounded
+reader cache. Full WGS throughput remains unmeasured.
 
 
 ## Explicit remote mode

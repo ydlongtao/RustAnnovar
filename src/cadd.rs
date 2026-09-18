@@ -5,6 +5,9 @@ use std::{
     path::Path,
 };
 
+type ScoreRow = (String, String, String, String);
+type ScoreRecords = std::collections::HashMap<(String, u64), Vec<ScoreRow>>;
+
 pub const HEADERS: [&str; 3] = ["CADD_raw", "CADD_phred", "CADD_status"];
 
 pub struct Database {
@@ -135,52 +138,41 @@ impl Database {
     pub fn metadata(&self) -> serde_json::Value {
         serde_json::json!({"source": self.path, "build": self.build, "version": self.version, "remote": self.remote.is_some()})
     }
-    pub fn batch(&self, variants: &[crate::Variant], missing: &str) -> Result<Vec<Vec<String>>> {
-        use std::collections::{BTreeSet, HashMap};
+    fn query_windows(
+        &self,
+        windows: &[(String, u64, u64)],
+        positions: &std::collections::HashMap<String, std::collections::HashSet<u64>>,
+    ) -> Result<ScoreRecords> {
+        use noodles_csi::io::IndexedRecord;
         let source: Box<dyn ReadSeek> = if let Some(remote) = &self.remote {
             Box::new(crate::http_range::Reader::from_source(remote.clone()))
         } else {
             Box::new(std::fs::File::open(&self.path)?)
         };
         let mut reader = noodles_csi::io::IndexedReader::new(source, self.index.clone());
-        let mut positions = BTreeSet::new();
-        for v in variants {
-            if is_snv(v) && self.chroms.contains_key(&v.chrom) {
-                positions.insert((v.chrom.clone(), v.end));
-            }
-        }
-        type ScoreRow = (String, String, String, String);
-        let mut records: HashMap<(String, u64), Vec<ScoreRow>> = HashMap::new();
-        // Coalesce nearby requested positions, but bound decoding work per query.
-        let mut windows: Vec<(String, u64, u64)> = Vec::new();
-        for (chrom, pos) in &positions {
-            if let Some((last_chrom, start, end)) = windows.last_mut() {
-                if last_chrom == chrom && pos - *end <= 32 && pos - *start < 4096 {
-                    *end = *pos;
-                    continue;
-                }
-            }
-            windows.push((chrom.clone(), *pos, *pos));
-        }
-        for (chrom, start, end) in windows {
-            let start = noodles_core::Position::try_from(usize::try_from(start)?)?;
-            let end = noodles_core::Position::try_from(usize::try_from(end)?)?;
-            let region = noodles_core::Region::new(self.chroms[&chrom].clone(), start..=end);
+        let mut records = ScoreRecords::new();
+        for (chrom, begin, end) in windows {
+            let start = noodles_core::Position::try_from(usize::try_from(*begin)?)?;
+            let stop = noodles_core::Position::try_from(usize::try_from(*end)?)?;
+            let region = noodles_core::Region::new(self.chroms[chrom].clone(), start..=stop);
+            let requested = &positions[chrom];
             for result in reader.query(&region)? {
                 let record = result?;
+                let actual = record.indexed_start_position().get() as u64;
+                // Own only positions in this bin, even if generic tabix records
+                // have an implicit end that overlaps the neighboring bin.
+                if actual < *begin || actual > *end || !requested.contains(&actual) {
+                    continue;
+                }
                 let fields = record.as_ref().split('\t').collect::<Vec<_>>();
                 ensure!(
                     fields.len() == 6,
                     "CADD native lookup requires score-only six-column table"
                 );
-                let actual: u64 = fields[1].parse()?;
                 ensure!(
-                    crate::model::normalize_chrom(fields[0]) == chrom,
+                    fields[0].strip_prefix("chr").unwrap_or(fields[0]) == chrom,
                     "CADD index/data chromosome mismatch"
                 );
-                if !positions.contains(&(chrom.clone(), actual)) {
-                    continue;
-                }
                 for (i, text) in fields[4..].iter().enumerate() {
                     let score: f64 = text.parse()?;
                     ensure!(
@@ -200,6 +192,38 @@ impl Database {
                     fields[5].into(),
                 ));
             }
+        }
+        Ok(records)
+    }
+    pub fn batch(&self, variants: &[crate::Variant], missing: &str) -> Result<Vec<Vec<String>>> {
+        use rayon::prelude::*;
+        use std::collections::{BTreeSet, HashMap, HashSet};
+        let mut bins = BTreeSet::new();
+        let mut positions: HashMap<String, HashSet<u64>> = HashMap::new();
+        // TBI's minimum genomic bin is 16 KiB. Query each touched bin once,
+        // rather than repeatedly scanning it for individual sparse WGS calls.
+        for v in variants {
+            if is_snv(v) && self.chroms.contains_key(&v.chrom) {
+                positions.entry(v.chrom.clone()).or_default().insert(v.end);
+                bins.insert((v.chrom.clone(), (v.end - 1) / 16384));
+            }
+        }
+        let windows = bins
+            .into_iter()
+            .map(|(chrom, bin)| (chrom, bin * 16384 + 1, (bin + 1) * 16384))
+            .collect::<Vec<_>>();
+        let parts = if self.remote.is_some() {
+            // Public remote mode uses one bounded reader; do not fan out requests.
+            vec![self.query_windows(&windows, &positions)?]
+        } else {
+            windows
+                .par_chunks(8)
+                .map(|chunk| self.query_windows(chunk, &positions))
+                .collect::<Result<Vec<_>>>()?
+        };
+        let mut records = ScoreRecords::new();
+        for part in parts {
+            records.extend(part);
         }
         Ok(variants
             .iter()

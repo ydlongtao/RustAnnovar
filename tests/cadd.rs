@@ -6,6 +6,63 @@ use rust_annovar::{
 };
 use std::fs;
 
+#[test]
+fn bin_queries_preserve_boundaries_order_and_duplicates_across_threads() {
+    use noodles_core::Position;
+    use noodles_csi::binning_index::index::{header::Builder, reference_sequence::bin::Chunk};
+    use std::io::Write;
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("bins.tsv.gz");
+    let mut writer = noodles_bgzf::Writer::new(fs::File::create(&path).unwrap());
+    writeln!(
+        writer,
+        "##CADD GRCh38-v1.7\n#Chrom\tPos\tRef\tAlt\tRawScore\tPHRED"
+    )
+    .unwrap();
+    let mut indexer = noodles_tabix::index::Indexer::default();
+    indexer.set_header(
+        Builder::gff()
+            .set_start_position_index(1)
+            .set_end_position_index(None)
+            .build(),
+    );
+    let mut variants = Vec::new();
+    let mut expected = Vec::new();
+    for bin in 0..24 {
+        for pos in [bin * 16384 + 1, (bin + 1) * 16384] {
+            let begin = writer.virtual_position();
+            writeln!(writer, "1\t{pos}\tA\tC\t{bin}\t{bin}").unwrap();
+            let position = Position::try_from(pos as usize).unwrap();
+            indexer
+                .add_record(
+                    "1",
+                    position,
+                    position,
+                    Chunk::new(begin, writer.virtual_position()),
+                )
+                .unwrap();
+            variants.push(Variant::new("chr1", pos - 1, pos, "A", "C").unwrap());
+            expected.push(vec![bin.to_string(), bin.to_string(), "scored".into()]);
+        }
+    }
+    writer.finish().unwrap();
+    noodles_tabix::io::Writer::new(fs::File::create(format!("{}.tbi", path.display())).unwrap())
+        .write_index(&indexer.build())
+        .unwrap();
+    variants.reverse();
+    expected.reverse();
+    variants.push(variants[0].clone());
+    expected.push(expected[0].clone());
+    let db = rust_annovar::cadd::Database::open(&path).unwrap();
+    for threads in [1, 4] {
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .unwrap();
+        assert_eq!(pool.install(|| db.batch(&variants, ".")).unwrap(), expected);
+    }
+}
+
 /// Run against independently downloaded official records, without distributing data.
 #[test]
 #[ignore = "requires CADD_TEST_TSV pointing to an official score-only TSV"]
