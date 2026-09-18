@@ -12,3 +12,5 @@
 
 *.rai
 *.rai.json
+__pycache__/
+*.pyc

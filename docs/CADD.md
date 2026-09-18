@@ -58,6 +58,21 @@ On HPC, `bash scripts/hpc_cadd_download.sh /DATABANK/users/hflt/RustAnnovar hg38
 verifies both files against the official MD5SUMs, and publishes final filenames
 only after verification. Existing files are checked rather than overwritten.
 
+For faster HPC transfers, the bounded four-connection downloader preserves
+and reuses existing single-stream prefixes, resumes individual chunks, checks
+HTTP ranges and source identity, and verifies the merged file against official
+MD5 before exposing it:
+
+```bash
+python3 scripts/hpc_cadd_parallel_download.py \
+  --root /DATABANK/users/hflt/RustAnnovar --build hg38 --workers 4
+python3 scripts/test_cadd_download.py
+```
+
+Chunks and the original partial file are retained for recovery. Their presence
+does not mean a completed or verified database exists. This method temporarily
+needs about twice the compressed database size for chunks and the merge.
+
 ## Converted filter scoring
 
 RustAnnovar can import official precomputed CADD tables and annotate exact
