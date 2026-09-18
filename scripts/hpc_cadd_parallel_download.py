@@ -40,6 +40,26 @@ def request(url, start, end, length=None, validator=None):
         raise
 
 
+def run_chunk_tasks(worker, count, workers):
+    # Do not eagerly queue the entire genome: a failed piece should prevent
+    # thousands of subsequent transfers from delaying the terminal error.
+    indices = iter(range(count))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        pending = {pool.submit(worker, i) for i in range(min(workers, count))}
+        for _ in range(min(workers, count)):
+            next(indices)
+        while pending:
+            done, pending = concurrent.futures.wait(
+                pending, return_when=concurrent.futures.FIRST_COMPLETED
+            )
+            for future in done:
+                future.result()
+            for _ in done:
+                index = next(indices, None)
+                if index is not None:
+                    pending.add(pool.submit(worker, index))
+
+
 def download(url, destination, checksum, workers, chunk_size, request_size=4 * 1048576):
     if request_size <= 0:
         raise ValueError("request size must be positive")
@@ -119,8 +139,7 @@ def download(url, destination, checksum, workers, chunk_size, request_size=4 * 1
                     time.sleep(min(30, 2 ** attempt))
 
     count = (length + chunk_size - 1) // chunk_size
-    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
-        list(pool.map(worker, range(count)))
+    run_chunk_tasks(worker, count, workers)
     merged = destination.with_name(destination.name + ".parallel.part")
     with merged.open("wb") as target:
         for index in range(count):

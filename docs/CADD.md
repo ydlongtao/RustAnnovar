@@ -150,3 +150,5 @@ python3 scripts/check_cadd_official.py --binary target/release/rust-annovar \
 See the [regional query profile](CADD-query-profile.md) for five-run timings and their limitations. Full WGS acceptance remains pending; the regional speedup must not be presented as a WGS speedup.
 
 The parallel downloader stores 64 MiB resumable pieces but limits each HTTP Range request to 4 MiB. This reduces the duration of individual connections; truncated responses retain downloaded bytes and retry from the saved offset. Source identity checks and the final official MD5 check still apply. If a job exhausts its retries, inspect its terminal exit status before resubmitting; existing pieces are reused.
+
+Only up to the configured worker count of piece tasks is submitted at once. A fatal piece error stops submission of further pieces; already active transfers finish before the error is reported. This avoids waiting for an entire genome of queued transfers after a failure.

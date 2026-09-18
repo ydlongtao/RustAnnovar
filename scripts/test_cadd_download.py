@@ -7,10 +7,21 @@ import unittest
 from unittest.mock import patch
 from pathlib import Path
 
-from hpc_cadd_parallel_download import download
+from hpc_cadd_parallel_download import download, run_chunk_tasks
 
 
 class DownloadTests(unittest.TestCase):
+    def test_chunk_failure_does_not_start_remaining_downloads(self):
+        started = []
+
+        def worker(index):
+            started.append(index)
+            raise ValueError("invalid range response")
+
+        with self.assertRaises(ValueError):
+            run_chunk_tasks(worker, 1000, 1)
+        self.assertEqual(started, [0])
+
     def test_prefix_reuse_and_atomic_checksum_verified_merge(self):
         data = bytes(range(251)) * 30
         requests = []
