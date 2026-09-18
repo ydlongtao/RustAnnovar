@@ -12,7 +12,9 @@ pub mod pipeline;
 pub use model::{Annotation, AnnotationKind, Variant};
 
 pub mod batch;
+pub mod cadd;
 pub mod disk_index;
+mod http_range;
 pub mod interval;
 pub mod reference;
 pub mod stream;

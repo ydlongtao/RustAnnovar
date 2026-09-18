@@ -47,6 +47,7 @@ struct ConvertArgs {
 
 #[derive(Clone, ValueEnum)]
 enum OpArg {
+    Cadd,
     Gene,
     Region,
     Filter,
@@ -54,6 +55,7 @@ enum OpArg {
 impl From<OpArg> for Operation {
     fn from(value: OpArg) -> Self {
         match value {
+            OpArg::Cadd => Self::Cadd,
             OpArg::Gene => Self::Gene,
             OpArg::Region => Self::Region,
             OpArg::Filter => Self::Filter,
@@ -112,6 +114,15 @@ struct DbArgs {
 }
 #[derive(Subcommand)]
 enum DbCommand {
+    /// Import official precomputed CADD SNVs into an ANNOVAR-compatible table.
+    ImportCadd {
+        input: PathBuf,
+        output: PathBuf,
+        #[arg(long)]
+        build: String,
+        #[arg(long)]
+        version: String,
+    },
     Validate {
         database: PathBuf,
         #[arg(long)]
@@ -251,6 +262,15 @@ fn run_table(args: TableArgs) -> Result<()> {
 
 fn run_db(command: DbCommand) -> Result<()> {
     match command {
+        DbCommand::ImportCadd {
+            input,
+            output,
+            build,
+            version,
+        } => {
+            let count = rust_annovar::cadd::import(&input, &output, &build, &version)?;
+            println!("imported {count} CADD SNVs");
+        }
         DbCommand::Validate { database, full } => {
             rust_annovar::disk_index::DiskFilter::open(&database, full)?;
             println!("current");

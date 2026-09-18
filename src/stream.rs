@@ -27,6 +27,15 @@ pub struct ExecutionOptions {
     pub report_json: Option<PathBuf>,
     #[arg(long, value_enum, default_value_t = Unsupported::Preserve)]
     pub unsupported: Unsupported,
+    /// Fail atomically if any SNV lacks a CADD score (including ambiguous N).
+    #[arg(long)]
+    pub cadd_require_all: bool,
+    /// Verify CADD's official assembly header (hg19 or hg38).
+    #[arg(long)]
+    pub cadd_build: Option<String>,
+    /// Verify CADD version in the official score-file header.
+    #[arg(long)]
+    pub cadd_version: Option<String>,
 }
 #[derive(Debug, Clone, Copy, clap::ValueEnum, PartialEq, Eq)]
 pub enum Normalization {
@@ -51,6 +60,8 @@ struct Report {
     annotation_seconds: f64,
     write_seconds: f64,
     total_seconds: f64,
+    cadd_counts: std::collections::BTreeMap<String, std::collections::BTreeMap<String, u64>>,
+    cadd_databases: std::collections::BTreeMap<String, serde_json::Value>,
 }
 
 pub struct AtomicOutput {
@@ -108,6 +119,13 @@ pub fn run(
     nastring: &str,
     opts: &ExecutionOptions,
 ) -> Result<()> {
+    if (opts.cadd_require_all || opts.cadd_build.is_some() || opts.cadd_version.is_some())
+        && !protocols
+            .iter()
+            .any(|p| p.operation == crate::pipeline::Operation::Cadd)
+    {
+        bail!("--cadd-require-all requires --operation cadd");
+    }
     if opts.threads == 0 || opts.batch_size == 0 || opts.memory_budget == 0 {
         bail!("threads, batch-size and memory-budget must be positive");
     }
@@ -133,7 +151,14 @@ pub fn run(
         None
     };
     let engine = AnnotationEngine::new_normalized(protocols, reference.as_ref())?;
+    if let Some(build) = &opts.cadd_build {
+        engine.check_cadd_build(build)?;
+    }
+    if let Some(version) = &opts.cadd_version {
+        engine.check_cadd_version(version)?;
+    }
     let mut report = Report {
+        cadd_databases: engine.cadd_metadata(),
         version: env!("CARGO_PKG_VERSION"),
         threads: opts.threads,
         database_seconds: start.elapsed().as_secs_f64(),
@@ -357,6 +382,31 @@ fn process(
     }
     let t = Instant::now();
     let mut result = pool.install(|| engine.annotate(&variants, nastring))?;
+    for (protocol, range) in protocols.iter().zip(engine.ranges()) {
+        if protocol.operation == crate::pipeline::Operation::Cadd {
+            for (variant, row) in variants.iter().zip(&result.rows) {
+                let state = &row[range.start + 2];
+                *report
+                    .cadd_counts
+                    .entry(protocol.name.clone())
+                    .or_default()
+                    .entry(state.clone())
+                    .or_default() += 1;
+                if opts.cadd_require_all && crate::cadd::is_snv_shape(variant) && state != "scored"
+                {
+                    bail!(
+                        "CADD {}: unscored SNV {}:{} {}>{} ({state}), input line {}",
+                        protocol.name,
+                        variant.chrom,
+                        variant.end,
+                        variant.reference,
+                        variant.alternate,
+                        variant.source_line
+                    );
+                }
+            }
+        }
+    }
     for (i, row) in result.rows.iter().enumerate() {
         if statuses[i] == "ok" {
             for (protocol, range) in protocols.iter().zip(engine.ranges()) {
@@ -372,8 +422,12 @@ fn process(
     let t = Instant::now();
     for (i, row) in result.rows.iter_mut().enumerate() {
         if statuses[i] == "unsupported_alt" {
-            for field in &mut row[5..engine.headers().len()] {
-                *field = nastring.into();
+            for (protocol, range) in protocols.iter().zip(engine.ranges()) {
+                if protocol.operation != crate::pipeline::Operation::Cadd {
+                    for field in &mut row[range] {
+                        *field = nastring.into();
+                    }
+                }
             }
         }
         row.insert(engine.headers().len(), statuses[i].into());

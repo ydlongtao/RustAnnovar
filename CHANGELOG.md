@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — CADD SNV integration
+
+- Added native local Tabix and explicit HTTPS byte-range queries of official score-only CADD tables.
+- Added RawScore, PHRED, per-allele status, strict SNV coverage mode, assembly/version checks and JSON provenance.
+- Added streaming import, checksum-verified resumable HPC downloads and independent official API probe verification.
+- Real-data fragment and cross-chromosome checks pass; exhaustive WGS coverage and performance remain pending.
+
 ## 0.2.0-beta.2 — main source update
 
 - Merged streaming annotation and the isolated sorted-filter MVP into `main`.

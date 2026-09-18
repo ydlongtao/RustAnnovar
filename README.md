@@ -30,6 +30,7 @@ flowchart TB
     TD["refGene-style models<br/>Transcript FASTA"] --> T
     ND["BED-like / UCSC regions<br/>GFF3 regions"] --> N
     VD["ANNOVAR-format filter databases<br/>dbNSFP / gnomAD / ClinVar / dbSNP"] --> V
+    CA["CADD score-only BGZF + Tabix<br/>Local / explicit HTTPS ranges"] --> V
     T --> C["Consequence"]
     N --> O["Overlap"]
     V --> L["Exact allele lookup"]
@@ -41,7 +42,7 @@ flowchart TB
     classDef data fill:#f1f7ed,stroke:#5b8247,color:#29421b;
     classDef output fill:#fff2df,stroke:#b57b24,color:#5b3b0f;
     class T,N,V engine;
-    class TD,ND,VD data;
+    class TD,ND,VD,CA data;
     class W output;
 ```
 
@@ -58,6 +59,8 @@ Transcript annotation currently reads refGene-style models and transcript FASTA.
 - **Performance results have a limited scope.** The measurements below describe specific local workloads; they do not establish equivalent results or a universal speedup on real WES/WGS datasets.
 
 ## Features
+
+- Score SNVs with official CADD RawScore/PHRED using native local Tabix or explicit HTTP-range queries; see [CADD integration status and usage](docs/CADD.md).
 
 - Read VCF, gzip-compressed VCF, and AVinput; split multiallelic VCF records.
 - Match variants by chromosome, coordinates, reference allele, and alternate allele.

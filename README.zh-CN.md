@@ -19,6 +19,8 @@
 > [!WARNING]
 > **本软件正在开放测试（Open Beta）。** 当前版本适合功能验证、性能测试和非关键研究流程。SNV 核心后果、generic filter 和 GFF3 区域注释已经与本地 ANNOVAR 基线核对；复杂 Indel、完整 HGVS、ncRNA 分类细节和部分历史数据库协议仍在完善。请在研究或临床决策前用原版 ANNOVAR 或其他成熟工具复核结果，并通过 [Issues](https://github.com/ydlongtao/RustAnnovar/issues) 报告差异。
 
+可通过原生 Tabix 或显式 HTTPS 范围查询取得 CADD SNV 的 RawScore 与 PHRED，并输出逐等位基因状态、覆盖统计及严格缺失检查，详见 [CADD 使用说明](docs/CADD.md)。
+
 ## 软件架构
 
 当前 `rust-annovar` 通过流式批次连接转录本、区间和变异匹配三类引擎，并按输入顺序汇总输出。
@@ -33,6 +35,7 @@ flowchart TB
     TD["refGene-style models<br/>Transcript FASTA"] --> T
     ND["BED-like / UCSC regions<br/>GFF3 regions"] --> N
     VD["ANNOVAR-format filter databases<br/>dbNSFP / gnomAD / ClinVar / dbSNP"] --> V
+    CA["CADD score-only BGZF + Tabix<br/>Local / explicit HTTPS ranges"] --> V
     T --> C["Consequence"]
     N --> O["Overlap"]
     V --> L["Exact allele lookup"]
@@ -44,7 +47,7 @@ flowchart TB
     classDef data fill:#f1f7ed,stroke:#5b8247,color:#29421b;
     classDef output fill:#fff2df,stroke:#b57b24,color:#5b3b0f;
     class T,N,V engine;
-    class TD,ND,VD data;
+    class TD,ND,VD,CA data;
     class W output;
 ```
 

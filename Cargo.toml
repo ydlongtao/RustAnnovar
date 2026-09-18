@@ -35,5 +35,9 @@ sha2 = "0.10"
 ureq = { version = "2", default-features = false, features = ["tls"] }
 
 tempfile = "3"
+noodles-tabix = "0.51"
+noodles-core = "0.17"
+noodles-csi = "0.45"
+noodles-bgzf = "0.37"
 
 [dev-dependencies]

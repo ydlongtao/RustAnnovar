@@ -13,6 +13,7 @@ pub enum Operation {
     Gene,
     Region,
     Filter,
+    Cadd,
 }
 
 impl Operation {
@@ -21,7 +22,8 @@ impl Operation {
             "g" | "gx" | "gene" => Ok(Self::Gene),
             "r" | "region" => Ok(Self::Region),
             "f" | "filter" => Ok(Self::Filter),
-            _ => bail!("unknown operation {value:?}; use g, r, or f"),
+            "cadd" => Ok(Self::Cadd),
+            _ => bail!("unknown operation {value:?}; use g, r, f, or cadd"),
         }
     }
 }
@@ -60,6 +62,9 @@ pub fn resolve_protocols(
             if !database.exists() {
                 bail!("database does not exist: {}", database.display());
             }
+            if *operation == Operation::Cadd {
+                crate::cadd::Database::open(&database)?.check_build(build)?;
+            }
             let fasta = (*operation == Operation::Gene)
                 .then(|| db_dir.join(format!("{build}_{name}Mrna.fa")))
                 .filter(|p| p.exists());
@@ -74,6 +79,7 @@ pub fn resolve_protocols(
 }
 
 enum Loaded {
+    Cadd(crate::cadd::Database),
     Disk(crate::disk_index::DiskFilter),
     Filter(FilterDatabase),
     Region(RegionDatabase),
@@ -100,6 +106,15 @@ impl AnnotationEngine {
             .collect::<Vec<_>>();
         for protocol in protocols {
             let database = match protocol.operation {
+                Operation::Cadd => {
+                    let db = crate::cadd::Database::open(&protocol.database)?;
+                    headers.extend(
+                        crate::cadd::HEADERS
+                            .iter()
+                            .map(|h| qualified_header(h, &protocol.name)),
+                    );
+                    Loaded::Cadd(db)
+                }
                 Operation::Filter => {
                     if crate::disk_index::DiskFilter::exists(&protocol.database) {
                         let db = crate::disk_index::DiskFilter::open(&protocol.database, false)?;
@@ -178,6 +193,7 @@ impl AnnotationEngine {
             .iter()
             .map(|db| {
                 let width = match db {
+                    Loaded::Cadd(_) => 3,
                     Loaded::Disk(db) => db.headers().len(),
                     Loaded::Filter(db) => db.headers.len(),
                     Loaded::Region(db) => db.headers.len(),
@@ -192,6 +208,35 @@ impl AnnotationEngine {
     pub fn headers(&self) -> &[String] {
         &self.headers
     }
+    pub fn check_cadd_build(&self, build: &str) -> Result<()> {
+        for db in &self.loaded {
+            if let Loaded::Cadd(db) = db {
+                db.check_build(build)?;
+            }
+        }
+        Ok(())
+    }
+    pub fn check_cadd_version(&self, version: &str) -> Result<()> {
+        for db in &self.loaded {
+            if let Loaded::Cadd(db) = db {
+                db.check_version(version)?;
+            }
+        }
+        Ok(())
+    }
+    pub fn cadd_metadata(&self) -> std::collections::BTreeMap<String, serde_json::Value> {
+        self.protocols
+            .iter()
+            .zip(&self.loaded)
+            .filter_map(|(protocol, db)| {
+                if let Loaded::Cadd(db) = db {
+                    Some((protocol.name.clone(), db.metadata()))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
     pub fn annotate(&self, variants: &[Variant], nastring: &str) -> Result<TableResult> {
         let mut headers = self.headers.clone();
         let protocols = &self.protocols;
@@ -203,6 +248,13 @@ impl AnnotationEngine {
                 _ => Ok(None),
             })
             .collect::<Result<_>>()?;
+        let cadd_rows = loaded
+            .iter()
+            .map(|db| match db {
+                Loaded::Cadd(db) => db.batch(variants, nastring).map(Some),
+                _ => Ok(None),
+            })
+            .collect::<Result<Vec<_>>>()?;
         let extra_width = variants
             .iter()
             .map(|variant| variant.extra.len())
@@ -217,13 +269,19 @@ impl AnnotationEngine {
         let rows = variants
             .par_iter()
             .with_min_len(min_len)
-            .map(|variant| {
+            .enumerate()
+            .map(|(variant_index, variant)| {
                 let mut row = variant.avinput_fields().to_vec();
                 for (index, (protocol, database)) in protocols.iter().zip(loaded).enumerate() {
+                    if let Loaded::Cadd(_) = database {
+                        row.extend(cadd_rows[index].as_ref().unwrap()[variant_index].clone());
+                        continue;
+                    }
                     let unsupported = variant.source_record.is_some()
                         && !variant.alternate.is_empty()
                         && !crate::io::supported_alt(&variant.alternate);
                     let (annotation, width) = match database {
+                        Loaded::Cadd(_) => unreachable!(),
                         Loaded::Disk(_) => {
                             let db = prepared[index].as_ref().unwrap();
                             (db.annotate(variant, &protocol.name), db.headers.len())
