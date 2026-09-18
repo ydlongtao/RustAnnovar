@@ -4,6 +4,7 @@ import http.server
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from hpc_cadd_parallel_download import download
@@ -13,6 +14,7 @@ class DownloadTests(unittest.TestCase):
     def test_prefix_reuse_and_atomic_checksum_verified_merge(self):
         data = bytes(range(251)) * 30
         requests = []
+        truncate_once = [False]
 
         class Handler(http.server.BaseHTTPRequestHandler):
             def do_GET(self):
@@ -23,7 +25,12 @@ class DownloadTests(unittest.TestCase):
                 self.send_header("Content-Length", str(end - start + 1))
                 self.send_header("ETag", '"fixed"')
                 self.end_headers()
-                self.wfile.write(data[start:end + 1])
+                payload = data[start:end + 1]
+                if truncate_once[0] and end > start:
+                    truncate_once[0] = False
+                    payload = payload[:128]
+                    self.close_connection = True
+                self.wfile.write(payload)
 
             def log_message(self, *args):
                 pass
@@ -42,6 +49,15 @@ class DownloadTests(unittest.TestCase):
                 self.assertEqual(old.read_bytes(), data[:1300])
                 self.assertNotIn((0, 1023), requests)  # First complete chunk reused.
                 self.assertIn((1300, 2047), requests)  # Partial second chunk resumed.
+                resumed = Path(directory) / "truncated.gz"
+                requests.clear()
+                truncate_once[0] = True
+                with patch("hpc_cadd_parallel_download.time.sleep"):
+                    download(url, resumed, hashlib.md5(data).hexdigest(), 1, 1024, request_size=256)
+                self.assertEqual(resumed.read_bytes(), data)
+                self.assertIn((0, 255), requests)
+                self.assertIn((128, 383), requests)
+                self.assertTrue(all(end - start + 1 <= 256 for start, end in requests))
                 failed = Path(directory) / "bad.gz"
                 with self.assertRaises(ValueError):
                     download(url, failed, "0" * 32, 4, 1024)

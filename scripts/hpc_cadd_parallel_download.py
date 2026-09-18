@@ -40,7 +40,9 @@ def request(url, start, end, length=None, validator=None):
         raise
 
 
-def download(url, destination, checksum, workers, chunk_size):
+def download(url, destination, checksum, workers, chunk_size, request_size=4 * 1048576):
+    if request_size <= 0:
+        raise ValueError("request size must be positive")
     if destination.exists():
         if digest(destination) != checksum:
             raise ValueError(f"existing CADD file fails official MD5: {destination}")
@@ -82,7 +84,7 @@ def download(url, destination, checksum, workers, chunk_size):
                         raise ValueError("old CADD prefix was truncated")
                     target.write(data)
                     available -= len(data)
-        for attempt in range(10):
+        while True:
             offset = partial.stat().st_size if partial.exists() else 0
             if offset > size:
                 raise ValueError("oversized partial CADD chunk")
@@ -90,29 +92,31 @@ def download(url, destination, checksum, workers, chunk_size):
                 partial.rename(final)
                 print(f"completed chunk {index}", flush=True)
                 return
-            try:
-                response, _, _ = request(url, start + offset, end, length, validator)
-                with response, partial.open("ab") as handle:
-                    remaining = size - offset
-                    while remaining:
-                        data = response.read(min(1048576, remaining))
-                        if not data:
-                            raise OSError("truncated CADD range")
-                        handle.write(data)
-                        remaining -= len(data)
-                    if response.read(1):
-                        raise ValueError("oversized CADD range body")
-                    handle.flush()
-                    os.fsync(handle.fileno())
-            except (OSError, TimeoutError, http.client.HTTPException) as error:
-                print(f"chunk {index}: attempt {attempt+1}: {error}", flush=True)
-                if attempt == 9:
-                    raise
-                time.sleep(min(30, 2 ** attempt))
-        # A successful final transfer still needs atomic completion.
-        if partial.stat().st_size != size:
-            raise ValueError("incomplete CADD chunk")
-        partial.rename(final)
+            # Bound connection duration while preserving the existing 64 MiB
+            # piece layout and identity manifest for durable resume.
+            for attempt in range(10):
+                offset = partial.stat().st_size if partial.exists() else 0
+                range_end = min(end, start + offset + request_size - 1)
+                try:
+                    response, _, _ = request(url, start + offset, range_end, length, validator)
+                    with response, partial.open("ab") as handle:
+                        remaining = range_end - start - offset + 1
+                        while remaining:
+                            data = response.read(min(1048576, remaining))
+                            if not data:
+                                raise OSError("truncated CADD range")
+                            handle.write(data)
+                            remaining -= len(data)
+                        if response.read(1):
+                            raise ValueError("oversized CADD range body")
+                        handle.flush()
+                        os.fsync(handle.fileno())
+                    break
+                except (OSError, TimeoutError, http.client.HTTPException) as error:
+                    print(f"chunk {index}: attempt {attempt+1}: {error}", flush=True)
+                    if attempt == 9:
+                        raise
+                    time.sleep(min(30, 2 ** attempt))
 
     count = (length + chunk_size - 1) // chunk_size
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
