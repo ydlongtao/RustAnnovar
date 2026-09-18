@@ -144,3 +144,7 @@ not establish whole-WGS speed or exhaustive coverage of every genomic site.
 python3 scripts/check_cadd_official.py --binary target/release/rust-annovar \
   --output-dir /path/to/new-verification-directory
 ```
+
+## Query optimization measurements
+
+See the [regional query profile](CADD-query-profile.md) for five-run timings and their limitations. Full WGS acceptance remains pending; the regional speedup must not be presented as a WGS speedup.
