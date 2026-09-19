@@ -60,7 +60,7 @@ Transcript annotation currently reads refGene-style models and transcript FASTA.
 
 ## Features
 
-- Score SNVs with official CADD RawScore/PHRED using native local Tabix or explicit HTTP-range queries; see [CADD integration status and usage](docs/CADD.md).
+- Score SNVs with official CADD RawScore/PHRED using native local Tabix or explicit HTTP-range queries; see [CADD usage](docs/CADD.md) and the [full-file GRCh38 GIAB result](docs/CADD-GIAB-validation.md). GRCh37 full-file validation is pending.
 
 - Read VCF, gzip-compressed VCF, and AVinput; split multiallelic VCF records.
 - Match variants by chromosome, coordinates, reference allele, and alternate allele.

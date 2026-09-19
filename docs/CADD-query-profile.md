@@ -19,7 +19,11 @@ The median ratio is 14.96× for this workload. The optimized implementation quer
 
 The optimized build also matched the independent official CADD API for 21 fixed public probe records in each of hg19 and hg38, including unsorted inputs and repeated records. Unit/integration tests cover bin boundaries, duplicate input preservation, exact REF/ALT matching, missing-score statuses, and one-thread/four-thread consistency.
 
-Full CADD files for both assemblies are downloading with official MD5 verification. Full GIAB autosomal strict-SNV acceptance jobs are queued and serialized. Until those jobs finish, full-genome coverage, WGS throughput, and large-input memory behavior remain unverified. These timings compare two Rust CADD implementations; they are not a Perl ANNOVAR comparison.
+At the time of this regional profile, both full CADD files were still
+downloading. The later complete-file GRCh38 GIAB result is reported
+[separately](CADD-GIAB-validation.md); GRCh37 acceptance remains pending.
+These timings compare two Rust CADD implementations; they are not a Perl
+ANNOVAR comparison.
 
 Raw profiling files are retained on the HPC under `/DATABANK/users/hflt/RustAnnovar/runs/cadd-query-profile-20260918/`. Large databases and variant files are not distributed in this repository.
 
@@ -29,7 +33,10 @@ The same optimized release build (`5499531`) subsequently scored all 271,738 can
 
 This single run took 18.21 seconds with peak RSS 371,340 KiB, using 16 threads, 10,000-record batches, and a 16 GiB managed memory budget. These are one-run measurements, not a five-run comparison. The database was a 25,098,715,136-byte contiguous prefix assembled from 374 fully downloaded 64 MiB blocks, with the official full Tabix index. The complete file's official MD5 had not yet been verified, so this remains a chromosome 1 check against a partial database and does not certify complete genome coverage or database integrity. Preparation time is excluded from annotation time. No Perl timing or Rust baseline comparison was performed for this workload.
 
-Raw files and job exit status are retained under the HPC run directories `cadd-giab-chr1-prefix-5499531-data` and `cadd-giab-chr1-prefix-5499531`. Full hg19/hg38 database downloads and complete autosomal GIAB acceptance remain in progress.
+Raw files and job exit status are retained under the HPC run directories
+`cadd-giab-chr1-prefix-5499531-data` and
+`cadd-giab-chr1-prefix-5499531`. The subsequent complete-file GRCh38 result
+is reported separately; GRCh37 acceptance remains pending.
 
 ### Thread and batch consistency on real data
 

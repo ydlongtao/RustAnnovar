@@ -24,7 +24,8 @@ if any SNV is unscored, including ambiguous N alleles and preserves existing fil
 cannot be rolled back. The JSON report contains per-protocol `cadd_counts`
 by state. Non-SNV alleles are reported but do not fail this SNV-only policy. Each touched 16,384-base Tabix bin is queried once per batch. Local bins
 use the configured Rayon pool; remote queries remain sequential with a bounded
-reader cache. Full WGS throughput remains unmeasured.
+reader cache. A full-file GRCh38 GIAB autosomal validation has now passed;
+see [the detailed result](CADD-GIAB-validation.md). GRCh37 validation is pending.
 
 
 ## Explicit remote mode
@@ -147,7 +148,10 @@ python3 scripts/check_cadd_official.py --binary target/release/rust-annovar \
 
 ## Query optimization measurements
 
-See the [regional query profile](CADD-query-profile.md) for five-run timings and their limitations. Full WGS acceptance remains pending; the regional speedup must not be presented as a WGS speedup.
+See the [regional query profile](CADD-query-profile.md) for the earlier
+two-build comparison, and the [full-file GRCh38 GIAB result](CADD-GIAB-validation.md)
+for strict SNV coverage and five subsequent-run timings. The regional speedup
+must not be presented as a WGS speedup. GRCh37 full-file acceptance remains pending.
 
 The parallel downloader stores 64 MiB resumable pieces but limits each HTTP Range request to 4 MiB. This reduces the duration of individual connections; truncated responses retain downloaded bytes and retry from the saved offset. Source identity checks and the final official MD5 check still apply. If a job exhausts its retries, inspect its terminal exit status before resubmitting; existing pieces are reused.
 

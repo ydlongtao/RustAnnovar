@@ -5,7 +5,7 @@
 - Added native local Tabix and explicit HTTPS byte-range queries of official score-only CADD tables.
 - Added RawScore, PHRED, per-allele status, strict SNV coverage mode, assembly/version checks and JSON provenance.
 - Added streaming import, checksum-verified resumable HPC downloads and independent official API probe verification.
-- Real-data fragment and cross-chromosome checks pass; exhaustive WGS coverage and performance remain pending.
+- Real-data fragment and cross-chromosome checks pass. Complete official GRCh38 v1.7 score-only data passed strict autosomal GIAB HG002 validation; GRCh37 full-file acceptance remains pending. See `docs/CADD-GIAB-validation.md` for scope and measured runtime.
 
 ## 0.2.0-beta.2 — main source update
 
