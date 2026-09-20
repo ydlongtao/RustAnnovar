@@ -1,0 +1,48 @@
+{
+  "denominator": 10000,
+  "input": "/DATABANK/users/hflt/RustAnnovar/datasets/giab/HG002_GRCh37_1_22_v4.2.1_benchmark.vcf.gz",
+  "output_sha256": "780f9eeb02f28454130f6138119684176b30fe6c537d61db858f2b0dafd2e84c",
+  "rates": {
+    "indel": 300,
+    "mnv": 1000,
+    "multiallelic": 1000,
+    "other": 1000,
+    "snv": 100
+  },
+  "seed": "RustAnnovar-GIAB-v1",
+  "selected_records_by_chromosome": {
+    "1": 4297,
+    "10": 2846,
+    "11": 2783,
+    "12": 2856,
+    "13": 2145,
+    "14": 1757,
+    "15": 1653,
+    "16": 1671,
+    "17": 1571,
+    "18": 1657,
+    "19": 1291,
+    "2": 4497,
+    "20": 1233,
+    "21": 729,
+    "22": 682,
+    "3": 3970,
+    "4": 4015,
+    "5": 3525,
+    "6": 3684,
+    "7": 3250,
+    "8": 3089,
+    "9": 2385
+  },
+  "selected_records_by_type": {
+    "indel": 15892,
+    "multiallelic": 4804,
+    "snv": 34890
+  },
+  "source_records_by_type": {
+    "indel": 539836,
+    "multiallelic": 47585,
+    "snv": 3446375
+  },
+  "source_sha256": "a40525db0ecba79a7e5c28e7765b97a265f3a143fd1141c66b1f5fd7c6092e69"
+}

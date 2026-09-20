@@ -1,0 +1,630 @@
+{
+  "alleles_by_type": {
+    "indel": 24907,
+    "other": 55,
+    "snv": 35427
+  },
+  "comparison_policy": "Match Chr/Start/End/Ref/Alt plus duplicate occurrence; report every shared field. Gene and AAChange comma-list order is counted separately; no semantic differences are suppressed.",
+  "different_by_type_and_field": {
+    "indel/AAChange.refGene": 7,
+    "indel/ExonicFunc.refGene": 2,
+    "indel/Func.refGene": 4,
+    "indel/Gene.refGene": 209,
+    "indel/GeneDetail.refGene": 597,
+    "other/ExonicFunc.refGene": 2,
+    "other/GeneDetail.refGene": 2,
+    "snv/AAChange.refGene": 5,
+    "snv/ExonicFunc.refGene": 5,
+    "snv/Gene.refGene": 298,
+    "snv/GeneDetail.refGene": 416
+  },
+  "examples": {
+    "AAChange.refGene": [
+      {
+        "perl": "UNKNOWN",
+        "rust": ".",
+        "variant": [
+          "11",
+          "67789293",
+          "67789293",
+          "-",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "SHANK2:NM_133266:exon10:c.C2697T:p.A899A,SHANK2:NM_001379226:exon15:c.C3324T:p.A1108A",
+        "rust": "SHANK2:NM_133266:exon10:c.C2697T:p.A899A,.,SHANK2:NM_001379226:exon15:c.C3324T:p.A1108A",
+        "variant": [
+          "11",
+          "70331937",
+          "70331937",
+          "G",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "LOC100132202:NM_001365373:exon4:c.T336A:p.H112Q",
+        "rust": ".",
+        "variant": [
+          "15",
+          "28801923",
+          "28801923",
+          "T",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "VSIG10L:NM_001163922:exon10:c.2576dupC:p.Q860Tfs*23",
+        "rust": "VSIG10L:NM_001163922:exon10:c.2576_2577insC:p.Q860Tfs",
+        "variant": [
+          "19",
+          "51835892",
+          "51835892",
+          "-",
+          "G",
+          0
+        ]
+      },
+      {
+        "perl": "DEFB126:NM_030931:exon2:c.314_315del:p.P106Rfs*26",
+        "rust": "DEFB126:NM_030931:exon2:c.314_315del:p.P106Rfs",
+        "variant": [
+          "20",
+          "126311",
+          "126312",
+          "CC",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "ABCF1:NM_001090:exon24:c.2424dupA:p.X808delinsX,ABCF1:NM_001025091:exon25:c.2538dupA:p.X846delinsX",
+        "rust": "ABCF1:NM_001090:exon24:c.2423_2424insA:p.=,ABCF1:NM_001025091:exon25:c.2537_2538insA:p.=",
+        "variant": [
+          "6",
+          "30558477",
+          "30558477",
+          "-",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "MUC21:NM_001010909:exon2:c.G1147A:p.V383M",
+        "rust": ".,MUC21:NM_001010909:exon2:c.G1147A:p.V383M",
+        "variant": [
+          "6",
+          "30955099",
+          "30955099",
+          "G",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "MUC21:NM_001010909:exon2:c.C1175A:p.T392N",
+        "rust": ".,MUC21:NM_001010909:exon2:c.C1175A:p.T392N",
+        "variant": [
+          "6",
+          "30955127",
+          "30955127",
+          "C",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "MICA:NM_001177519:exon5:c.952_953insCTGCTGCTGCT:p.G318Afs*72,MICA:NM_001289152:exon5:c.661_662insCTGCTGCTGCT:p.G221Afs*72,MICA:NM_001289153:exon5:c.661_662insCTGCTGCTGCT:p.G221Afs*72,MICA:NM_001289154:exon5:c.538_539insCTGCTGCTGCT:p.G180Afs*72",
+        "rust": "MICA:NM_001289152:exon5:c.661_662insCTGCTGCTGCT:p.G221Afs,MICA:NM_001289154:exon5:c.538_539insCTGCTGCTGCT:p.G180Afs,MICA:NM_001289153:exon5:c.661_662insCTGCTGCTGCT:p.G221Afs,MICA:NM_001177519:exon5:c.952_953insCTGCTGCTGCT:p.G318Afs,.",
+        "variant": [
+          "6",
+          "31380161",
+          "31380161",
+          "-",
+          "CTGCTGCTGCT",
+          0
+        ]
+      },
+      {
+        "perl": "UNKNOWN",
+        "rust": ".",
+        "variant": [
+          "7",
+          "150713902",
+          "150713902",
+          "-",
+          "C",
+          0
+        ]
+      }
+    ],
+    "ExonicFunc.refGene": [
+      {
+        "perl": "synonymous SNV",
+        "rust": "synonymous SNV,unknown",
+        "variant": [
+          "11",
+          "70331937",
+          "70331937",
+          "G",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "nonsynonymous SNV",
+        "rust": "unknown",
+        "variant": [
+          "15",
+          "28801923",
+          "28801923",
+          "T",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "nonframeshift insertion",
+        "rust": "frameshift insertion",
+        "variant": [
+          "6",
+          "30558477",
+          "30558477",
+          "-",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "nonsynonymous SNV",
+        "rust": "unknown,nonsynonymous SNV",
+        "variant": [
+          "6",
+          "30955099",
+          "30955099",
+          "G",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "nonsynonymous SNV",
+        "rust": "unknown,nonsynonymous SNV",
+        "variant": [
+          "6",
+          "30955127",
+          "30955127",
+          "C",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "frameshift insertion",
+        "rust": "frameshift insertion,unknown",
+        "variant": [
+          "6",
+          "31380161",
+          "31380161",
+          "-",
+          "CTGCTGCTGCT",
+          0
+        ]
+      },
+      {
+        "perl": ".",
+        "rust": "unknown",
+        "variant": [
+          "6",
+          "31380161",
+          "31380161",
+          "G",
+          "0",
+          0
+        ]
+      },
+      {
+        "perl": ".",
+        "rust": "unknown",
+        "variant": [
+          "6",
+          "32632587",
+          "32632587",
+          "A",
+          "0",
+          0
+        ]
+      },
+      {
+        "perl": "unknown",
+        "rust": "synonymous SNV",
+        "variant": [
+          "8",
+          "142477517",
+          "142477517",
+          "G",
+          "A",
+          0
+        ]
+      }
+    ],
+    "Func.refGene": [
+      {
+        "perl": "ncRNA_exonic",
+        "rust": "intronic",
+        "variant": [
+          "20",
+          "31108088",
+          "31108088",
+          "-",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "exonic;splicing",
+        "rust": "exonic",
+        "variant": [
+          "6",
+          "31380161",
+          "31380161",
+          "-",
+          "CTGCTGCTGCT",
+          0
+        ]
+      },
+      {
+        "perl": "exonic;splicing",
+        "rust": "exonic",
+        "variant": [
+          "7",
+          "150713902",
+          "150713902",
+          "-",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "splicing",
+        "rust": "UTR5",
+        "variant": [
+          "9",
+          "128025963",
+          "128025989",
+          "CAGCACTCCATCTGTAGGTATGTCTGT",
+          "-",
+          0
+        ]
+      }
+    ],
+    "Gene.refGene": [
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "1",
+          "187452540",
+          "187452540",
+          "T",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "1",
+          "187463644",
+          "187463644",
+          "T",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "1",
+          "187513002",
+          "187513002",
+          "G",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "1",
+          "187548443",
+          "187548443",
+          "C",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "1",
+          "187591878",
+          "187591878",
+          "C",
+          "T",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "1",
+          "187614032",
+          "187614032",
+          "G",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "1",
+          "187624828",
+          "187624828",
+          "A",
+          "G",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "1",
+          "187634068",
+          "187634071",
+          "CCTT",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "1",
+          "187634071",
+          "187634071",
+          "-",
+          "CCTTCCTT",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "1",
+          "187662173",
+          "187662173",
+          "A",
+          "G",
+          0
+        ]
+      }
+    ],
+    "GeneDetail.refGene": [
+      {
+        "perl": "dist=139",
+        "rust": "dist=139,dist=156",
+        "variant": [
+          "1",
+          "100643968",
+          "100643968",
+          "C",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "NM_004401:c.*959_*957delAAA",
+        "rust": "NM_004401",
+        "variant": [
+          "1",
+          "10520588",
+          "10520590",
+          "TTT",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "NM_004401:c.*958_*957delAA",
+        "rust": "NM_004401",
+        "variant": [
+          "1",
+          "10520589",
+          "10520590",
+          "TT",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "dist=526",
+        "rust": "dist=526,dist=588",
+        "variant": [
+          "1",
+          "111888656",
+          "111888656",
+          "G",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "NM_006784:c.*663_*666delGTGT",
+        "rust": "NM_006784",
+        "variant": [
+          "1",
+          "118502733",
+          "118502736",
+          "GTGT",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "NM_006784:c.*666_*667insGTGT",
+        "rust": "NM_006784",
+        "variant": [
+          "1",
+          "118502736",
+          "118502736",
+          "-",
+          "GTGT",
+          0
+        ]
+      },
+      {
+        "perl": "NM_012231:c.-10369G>C,NM_015866:c.-10369G>C",
+        "rust": "NM_012231:c.-474G>C,NM_015866:c.-474G>C",
+        "variant": [
+          "1",
+          "14031732",
+          "14031732",
+          "G",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "NM_001303456:c.*962_*960delGTT,NM_006468:c.*962_*960delGTT",
+        "rust": "NM_001303456,NM_006468",
+        "variant": [
+          "1",
+          "145591689",
+          "145591691",
+          "AAC",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "dist=655",
+        "rust": "dist=132,dist=655",
+        "variant": [
+          "1",
+          "151374545",
+          "151374545",
+          "C",
+          "T",
+          0
+        ]
+      },
+      {
+        "perl": "NM_001365048:c.*2330_*2331insCATGCCCC,NM_001111:c.*2330_*2331insCATGCCCC,NM_001365046:c.*2330_*2331insCATGCCCC,NM_001193495:c.*2330_*2331insCATGCCCC,NM_001365047:c.*2330_*2331insCATGCCCC,NM_015840:c.*2330_*2331insCATGCCCC,NM_001365045:c.*2330_*2331insCATGCCCC,NM_001025107:c.*2330_*2331insCATGCCCC,NM_001365049:c.*2330_*2331insCATGCCCC,NM_015841:c.*2330_*2331insCATGCCCC",
+        "rust": "NM_001365048,NM_001111,NM_001365046,NM_001193495,NM_001365047,NM_015840,NM_001365045,NM_001025107,NM_001365049,NM_015841",
+        "variant": [
+          "1",
+          "154554951",
+          "154554951",
+          "-",
+          "GGGGCATG",
+          0
+        ]
+      }
+    ]
+  },
+  "field_counts": {
+    "AAChange.refGene": {
+      "different": 12,
+      "exact": 60296,
+      "order_insensitive": 81
+    },
+    "ExonicFunc.refGene": {
+      "different": 9,
+      "exact": 60380,
+      "order_insensitive": 0
+    },
+    "Func.refGene": {
+      "different": 4,
+      "exact": 60385,
+      "order_insensitive": 0
+    },
+    "Gene.refGene": {
+      "different": 507,
+      "exact": 59882,
+      "order_insensitive": 0
+    },
+    "GeneDetail.refGene": {
+      "different": 1015,
+      "exact": 59374,
+      "order_insensitive": 0
+    }
+  },
+  "field_counts_when_perl_nonmissing": {
+    "AAChange.refGene": {
+      "different": 12,
+      "exact": 157,
+      "order_insensitive": 81,
+      "total": 250
+    },
+    "ExonicFunc.refGene": {
+      "different": 7,
+      "exact": 243,
+      "order_insensitive": 0,
+      "total": 250
+    },
+    "Func.refGene": {
+      "different": 4,
+      "exact": 60385,
+      "order_insensitive": 0,
+      "total": 60389
+    },
+    "Gene.refGene": {
+      "different": 507,
+      "exact": 59882,
+      "order_insensitive": 0,
+      "total": 60389
+    },
+    "GeneDetail.refGene": {
+      "different": 1006,
+      "exact": 32667,
+      "order_insensitive": 0,
+      "total": 33673
+    }
+  },
+  "matched_variant_occurrences": 60389,
+  "missing_in_perl": 0,
+  "missing_in_perl_examples": [],
+  "missing_in_rust": 0,
+  "missing_in_rust_examples": [],
+  "perl_rows": 60389,
+  "perl_table_sha256": "07d9714d3f5a82d8e7312d8bac82c3a638e3d8abac2ca48a565b86cb91acfca9",
+  "protocol": "refGene",
+  "rows_all_fields_exact": 59288,
+  "rows_all_fields_exact_by_type": {
+    "indel": 24303,
+    "other": 53,
+    "snv": 34932
+  },
+  "rows_all_fields_order_insensitive": 59369,
+  "rows_all_fields_order_insensitive_by_type": {
+    "indel": 24306,
+    "other": 53,
+    "snv": 35010
+  },
+  "rust_rows": 60389,
+  "rust_table_sha256": "785b7f8f5c719a4a5fc47499811e29338100b3e050e4597ea17667f5227e5956"
+}

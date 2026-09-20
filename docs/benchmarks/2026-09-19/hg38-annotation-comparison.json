@@ -1,0 +1,569 @@
+{
+  "alleles_by_type": {
+    "indel": 25437,
+    "other": 55,
+    "snv": 35195
+  },
+  "comparison_policy": "Match Chr/Start/End/Ref/Alt plus duplicate occurrence; report every shared field. Gene and AAChange comma-list order is counted separately; no semantic differences are suppressed.",
+  "different_by_type_and_field": {
+    "indel/AAChange.refGeneWithVer": 2,
+    "indel/ExonicFunc.refGeneWithVer": 1,
+    "indel/Func.refGeneWithVer": 1,
+    "indel/Gene.refGeneWithVer": 215,
+    "indel/GeneDetail.refGeneWithVer": 581,
+    "other/GeneDetail.refGeneWithVer": 1,
+    "snv/AAChange.refGeneWithVer": 8,
+    "snv/ExonicFunc.refGeneWithVer": 6,
+    "snv/Gene.refGeneWithVer": 313,
+    "snv/GeneDetail.refGeneWithVer": 416
+  },
+  "examples": {
+    "AAChange.refGeneWithVer": [
+      {
+        "perl": "OR2T11:NM_001001964.1:exon1:c.320_321del:p.S107*",
+        "rust": "OR2T11:NM_001001964.1:exon1:c.320_321del:p.S107Xfs",
+        "variant": [
+          "chr1",
+          "248626808",
+          "248626809",
+          "AG",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "CDCP2:NM_201546.4:exon5:c.1223_1224insG:p.M409Hfs*45",
+        "rust": "CDCP2:NM_201546.4:exon5:c.1223_1224insG:p.M409Hfs",
+        "variant": [
+          "chr1",
+          "54139646",
+          "54139646",
+          "-",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "UNKNOWN",
+        "rust": ".",
+        "variant": [
+          "chr11",
+          "1083116",
+          "1083116",
+          "G",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "UNKNOWN",
+        "rust": "TXNRD1:NM_001093771.3:exon7:c.C615T:p.L205L,TXNRD1:NM_182729.3:exon5:c.C165T:p.L55L,TXNRD1:NM_003330.4:exon5:c.C321T:p.L107L,TXNRD1:NM_182743.3:exon4:c.C165T:p.L55L,TXNRD1:NM_001261446.2:exon4:c.C51T:p.L17L,TXNRD1:NM_001261445.2:exon5:c.C315T:p.L105L,TXNRD1:NM_182742.3:exon4:c.C165T:p.L55L",
+        "variant": [
+          "chr12",
+          "104315781",
+          "104315781",
+          "C",
+          "T",
+          0
+        ]
+      },
+      {
+        "perl": "OCA2:NM_000275.3:exon10:c.G1065A:p.A355A",
+        "rust": ".",
+        "variant": [
+          "chr15",
+          "27990627",
+          "27990627",
+          "C",
+          "T",
+          0
+        ]
+      },
+      {
+        "perl": "LLGL2:NM_004524.3:exon24:c.C2981G:p.P994R",
+        "rust": "LLGL2:NM_001031803.2:exon25:c.C3024G:p.A1008A,LLGL2:NM_004524.3:exon24:c.C2981G:p.P994R",
+        "variant": [
+          "chr17",
+          "75574637",
+          "75574637",
+          "C",
+          "G",
+          0
+        ]
+      },
+      {
+        "perl": "LILRB3:NM_001081450.3:exon5:c.G863C:p.R288P,LILRB3:NM_001320960.2:exon5:c.G863C:p.R288P,LILRB3:NM_006864.4:exon5:c.G863C:p.R288P",
+        "rust": ".,LILRB3:NM_001081450.3:exon5:c.G863C:p.G288A,LILRB3:NM_006864.4:exon5:c.G863C:p.R288P",
+        "variant": [
+          "chr19",
+          "54221175",
+          "54221175",
+          "C",
+          "G",
+          0
+        ]
+      },
+      {
+        "perl": "SLC45A2:NM_001297417.3:exon3:c.A661G:p.S221G",
+        "rust": ".",
+        "variant": [
+          "chr5",
+          "33954406",
+          "33954406",
+          "T",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "CDK7:NM_001324071.2:exon2:c.C65T:p.T22I",
+        "rust": "CDK7:NM_001324070.2:exon2:c.C99T:p.N33N,CDK7:NM_001799.4:exon2:c.C99T:p.N33N,CDK7:NM_001324071.2:exon2:c.C65T:p.T22I",
+        "variant": [
+          "chr5",
+          "69235426",
+          "69235426",
+          "C",
+          "T",
+          0
+        ]
+      },
+      {
+        "perl": "HLA-C:NM_001243042.1:exon3:c.A618G:p.A206A,HLA-C:NM_002117.6:exon3:c.A618G:p.A206A",
+        "rust": "HLA-C:NM_002117.6:exon3:c.A618G:p.R206R,HLA-C:NM_001243042.1:exon3:c.A618G:p.A206A",
+        "variant": [
+          "chr6",
+          "31271074",
+          "31271074",
+          "T",
+          "C",
+          0
+        ]
+      }
+    ],
+    "ExonicFunc.refGeneWithVer": [
+      {
+        "perl": "stopgain",
+        "rust": "frameshift deletion",
+        "variant": [
+          "chr1",
+          "248626808",
+          "248626809",
+          "AG",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "unknown",
+        "rust": "synonymous SNV",
+        "variant": [
+          "chr12",
+          "104315781",
+          "104315781",
+          "C",
+          "T",
+          0
+        ]
+      },
+      {
+        "perl": "synonymous SNV",
+        "rust": "unknown",
+        "variant": [
+          "chr15",
+          "27990627",
+          "27990627",
+          "C",
+          "T",
+          0
+        ]
+      },
+      {
+        "perl": "nonsynonymous SNV",
+        "rust": "synonymous SNV,nonsynonymous SNV",
+        "variant": [
+          "chr17",
+          "75574637",
+          "75574637",
+          "C",
+          "G",
+          0
+        ]
+      },
+      {
+        "perl": "nonsynonymous SNV",
+        "rust": "unknown,nonsynonymous SNV",
+        "variant": [
+          "chr19",
+          "54221175",
+          "54221175",
+          "C",
+          "G",
+          0
+        ]
+      },
+      {
+        "perl": "nonsynonymous SNV",
+        "rust": "unknown",
+        "variant": [
+          "chr5",
+          "33954406",
+          "33954406",
+          "T",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "nonsynonymous SNV",
+        "rust": "synonymous SNV,nonsynonymous SNV",
+        "variant": [
+          "chr5",
+          "69235426",
+          "69235426",
+          "C",
+          "T",
+          0
+        ]
+      }
+    ],
+    "Func.refGeneWithVer": [
+      {
+        "perl": "intronic",
+        "rust": "splicing",
+        "variant": [
+          "chr15",
+          "85246723",
+          "85246723",
+          "-",
+          "CCCAGGGTCTTCCGGC",
+          0
+        ]
+      }
+    ],
+    "Gene.refGeneWithVer": [
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "chr1",
+          "187479538",
+          "187479539",
+          "AA",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "chr1",
+          "187490851",
+          "187490851",
+          "A",
+          "G",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "chr1",
+          "187491766",
+          "187491766",
+          "C",
+          "G",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "chr1",
+          "187633566",
+          "187633566",
+          "A",
+          "G",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "chr1",
+          "187639829",
+          "187639829",
+          "T",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "chr1",
+          "187695912",
+          "187695912",
+          "-",
+          "TATA",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "chr1",
+          "187723622",
+          "187723623",
+          "AC",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "chr1",
+          "187779604",
+          "187779604",
+          "-",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "chr1",
+          "187796785",
+          "187796785",
+          "G",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "LINC01037,NONE",
+        "rust": "LINC01037,BRINP3",
+        "variant": [
+          "chr1",
+          "187906280",
+          "187906280",
+          "A",
+          "G",
+          0
+        ]
+      }
+    ],
+    "GeneDetail.refGeneWithVer": [
+      {
+        "perl": "dist=153",
+        "rust": "dist=712,dist=153",
+        "variant": [
+          "chr1",
+          "111185816",
+          "111185816",
+          "T",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "NM_001312686.2:c.*5208_*5209insA,NM_014813.3:c.*5208_*5209insA",
+        "rust": "NM_001312686.2,NM_014813.3",
+        "variant": [
+          "chr1",
+          "113129309",
+          "113129309",
+          "-",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "NM_001312686.2:c.*5208_*5209insAAAA,NM_014813.3:c.*5208_*5209insAAAA",
+        "rust": "NM_001312686.2,NM_014813.3",
+        "variant": [
+          "chr1",
+          "113129309",
+          "113129309",
+          "-",
+          "AAAA",
+          0
+        ]
+      },
+      {
+        "perl": "NM_004892.6:c.*1894_*1893delAT",
+        "rust": "NM_004892.6",
+        "variant": [
+          "chr1",
+          "120155144",
+          "120155145",
+          "AT",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "dist=260",
+        "rust": "dist=804,dist=397,dist=260",
+        "variant": [
+          "chr1",
+          "121184715",
+          "121184715",
+          "A",
+          "G",
+          0
+        ]
+      },
+      {
+        "perl": "NM_023013.4:c.-1802G>C",
+        "rust": "NM_023013.4:c.-74G>C",
+        "variant": [
+          "chr1",
+          "12791426",
+          "12791426",
+          "G",
+          "C",
+          0
+        ]
+      },
+      {
+        "perl": "NM_003126.4:c.-126_-125insT",
+        "rust": "NM_003126.4",
+        "variant": [
+          "chr1",
+          "158686642",
+          "158686642",
+          "-",
+          "A",
+          0
+        ]
+      },
+      {
+        "perl": "NM_198929.5:c.*142_*167delTATATATATATATATATATATATATA,NM_198928.5:c.*174_*199delTATATATATATATATATATATATATA,NM_198930.4:c.*142_*167delTATATATATATATATATATATATATA,NM_152501.5:c.*174_*199delTATATATATATATATATATATATATA",
+        "rust": "NM_198929.5,NM_198928.5,NM_198930.4,NM_152501.5",
+        "variant": [
+          "chr1",
+          "158976869",
+          "158976894",
+          "TATATATATATATATATATATATATA",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "NM_198929.5:c.*148_*167delTATATATATATATATATATA,NM_198928.5:c.*180_*199delTATATATATATATATATATA,NM_198930.4:c.*148_*167delTATATATATATATATATATA,NM_152501.5:c.*180_*199delTATATATATATATATATATA",
+        "rust": "NM_198929.5,NM_198928.5,NM_198930.4,NM_152501.5",
+        "variant": [
+          "chr1",
+          "158976875",
+          "158976894",
+          "TATATATATATATATATATA",
+          "-",
+          0
+        ]
+      },
+      {
+        "perl": "dist=472",
+        "rust": "dist=472,dist=475",
+        "variant": [
+          "chr1",
+          "160187452",
+          "160187452",
+          "G",
+          "T",
+          0
+        ]
+      }
+    ]
+  },
+  "field_counts": {
+    "AAChange.refGeneWithVer": {
+      "different": 10,
+      "exact": 60599,
+      "order_insensitive": 78
+    },
+    "ExonicFunc.refGeneWithVer": {
+      "different": 7,
+      "exact": 60680,
+      "order_insensitive": 0
+    },
+    "Func.refGeneWithVer": {
+      "different": 1,
+      "exact": 60686,
+      "order_insensitive": 0
+    },
+    "Gene.refGeneWithVer": {
+      "different": 528,
+      "exact": 60159,
+      "order_insensitive": 0
+    },
+    "GeneDetail.refGeneWithVer": {
+      "different": 998,
+      "exact": 59689,
+      "order_insensitive": 0
+    }
+  },
+  "field_counts_when_perl_nonmissing": {
+    "AAChange.refGeneWithVer": {
+      "different": 10,
+      "exact": 139,
+      "order_insensitive": 78,
+      "total": 227
+    },
+    "ExonicFunc.refGeneWithVer": {
+      "different": 7,
+      "exact": 220,
+      "order_insensitive": 0,
+      "total": 227
+    },
+    "Func.refGeneWithVer": {
+      "different": 1,
+      "exact": 60686,
+      "order_insensitive": 0,
+      "total": 60687
+    },
+    "Gene.refGeneWithVer": {
+      "different": 528,
+      "exact": 60159,
+      "order_insensitive": 0,
+      "total": 60687
+    },
+    "GeneDetail.refGeneWithVer": {
+      "different": 993,
+      "exact": 32794,
+      "order_insensitive": 0,
+      "total": 33787
+    }
+  },
+  "matched_variant_occurrences": 60687,
+  "missing_in_perl": 0,
+  "missing_in_perl_examples": [],
+  "missing_in_rust": 0,
+  "missing_in_rust_examples": [],
+  "perl_rows": 60687,
+  "perl_table_sha256": "e6ecbb344f9459ab13344285fdf414ed24098f2d992cd64cef3e67d5891dbc2a",
+  "protocol": "refGeneWithVer",
+  "rows_all_fields_exact": 59605,
+  "rows_all_fields_exact_by_type": {
+    "indel": 24850,
+    "other": 54,
+    "snv": 34701
+  },
+  "rows_all_fields_order_insensitive": 59683,
+  "rows_all_fields_order_insensitive_by_type": {
+    "indel": 24854,
+    "other": 54,
+    "snv": 34775
+  },
+  "rust_rows": 60687,
+  "rust_table_sha256": "bc55ddc0e64cde05438b6784bd16d8a93ea385f1f88555198c6eb3c039d36d32"
+}

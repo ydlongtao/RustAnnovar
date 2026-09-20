@@ -2,6 +2,7 @@
 
 ## Unreleased — CADD SNV integration
 
+- Added reproducible public GIAB HG002 v4.2.1 hg19/hg38 ANNOVAR gene-annotation concordance analysis, including exact and list-order-aware field comparisons, independent VCF conversion checks, compact evidence JSON, and an English report. The results expose unresolved differences; they do not establish full compatibility.
 - Added native local Tabix and explicit HTTPS byte-range queries of official score-only CADD tables.
 - Added RawScore, PHRED, per-allele status, strict SNV coverage mode, assembly/version checks and JSON provenance.
 - Added streaming import, checksum-verified resumable HPC downloads and independent official API probe verification.
